@@ -1,0 +1,439 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/counter.gd" id="1_counter"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area.gd" id="2_safe"]
+[ext_resource type="Theme" path="res://assets/theme.tres" id="3_theme"]
+[ext_resource type="PackedScene" path="res://scenes/components/big_tap.tscn" id="4_tap"]
+[ext_resource type="Script" path="res://scripts/ui/marks.gd" id="5_marks"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.984314, 0.964706, 0.933333, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.705882, 0.286275, 0.180392, 0.18)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_disabled"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(1, 1, 1, 0.72)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_focus"]
+
+[node name="Counter" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_theme")
+script = ExtResource("1_counter")
+
+[node name="Background" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.984314, 0.964706, 0.933333, 1)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_safe")
+
+[node name="Screen" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="TopPad" type="MarginContainer" parent="SafeArea/Screen"]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 0
+
+[node name="TopBar" type="HBoxContainer" parent="SafeArea/Screen/TopPad"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ProjectName" type="Button" parent="SafeArea/Screen/TopPad/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+focus_mode = 0
+flat = true
+action_mode = 0
+alignment = 0
+clip_text = true
+text = "My project"
+
+[node name="Sun" type="Control" parent="SafeArea/Screen/TopPad/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("5_marks")
+kind = "sun"
+
+[node name="LockButton" type="Button" parent="SafeArea/Screen/TopPad/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+focus_mode = 0
+flat = true
+action_mode = 0
+text = ""
+
+[node name="LockMark" type="Control" parent="SafeArea/Screen/TopPad/TopBar/LockButton"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -14.0
+offset_top = -14.0
+offset_right = 14.0
+offset_bottom = 14.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("5_marks")
+kind = "lock"
+
+[node name="Menu" type="Button" parent="SafeArea/Screen/TopPad/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+focus_mode = 0
+flat = true
+action_mode = 0
+text = ""
+
+[node name="MenuMark" type="Control" parent="SafeArea/Screen/TopPad/TopBar/Menu"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -14.0
+offset_top = -14.0
+offset_right = 14.0
+offset_bottom = 14.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("5_marks")
+kind = "menu"
+
+[node name="Spike" type="VBoxContainer" parent="SafeArea/Screen"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SpikeLabel" type="Label" parent="SafeArea/Screen/Spike"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Widget spike"
+horizontal_alignment = 1
+
+[node name="Write42" type="Button" parent="SafeArea/Screen/Spike"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+flat = true
+action_mode = 0
+text = "Write 42"
+
+[node name="PlusOne" type="Button" parent="SafeArea/Screen/Spike"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+flat = true
+action_mode = 0
+text = "+1"
+
+[node name="ReadPending" type="Button" parent="SafeArea/Screen/Spike"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+flat = true
+action_mode = 0
+text = "Read pending"
+
+[node name="SpikeStatus" type="Label" parent="SafeArea/Screen/Spike"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "available: false"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Middle" type="Control" parent="SafeArea/Screen"]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="BigTap" parent="SafeArea/Screen/Middle" instance=ExtResource("4_tap")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="SafeArea/Screen/Middle/BigTap"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Column" type="VBoxContainer" parent="SafeArea/Screen/Middle/BigTap/Center"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="CounterName" type="Label" parent="SafeArea/Screen/Middle/BigTap/Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.368627, 0.337255, 0.305882, 1)
+theme_override_font_sizes/font_size = 22
+text = "Row"
+horizontal_alignment = 1
+
+[node name="Numeral" type="Label" parent="SafeArea/Screen/Middle/BigTap/Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_font_sizes/font_size = 160
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Target" type="Label" parent="SafeArea/Screen/Middle/BigTap/Center/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.368627, 0.337255, 0.305882, 1)
+theme_override_font_sizes/font_size = 20
+text = "of 120"
+horizontal_alignment = 1
+
+[node name="Progress" type="ProgressBar" parent="SafeArea/Screen/Middle/BigTap/Center/Column"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+max_value = 1.0
+show_percentage = false
+
+[node name="Linked" type="Label" parent="SafeArea/Screen/Middle/BigTap/Center/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="SafeArea/Screen/Middle/BigTap/Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.368627, 0.337255, 0.305882, 1)
+theme_override_font_sizes/font_size = 18
+text = "Tap anywhere to count"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="LockMessage" type="Label" parent="SafeArea/Screen/Middle/BigTap/Center/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.705882, 0.286275, 0.180392, 1)
+theme_override_font_sizes/font_size = 18
+text = "Locked — hold the padlock to unlock"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Bottom" type="VBoxContainer" parent="SafeArea/Screen"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Divider" type="ColorRect" parent="SafeArea/Screen/Bottom"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.368627, 0.337255, 0.305882, 1)
+
+[node name="BottomPad" type="MarginContainer" parent="SafeArea/Screen/Bottom"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 16
+
+[node name="Actions" type="HBoxContainer" parent="SafeArea/Screen/Bottom/BottomPad"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Minus" type="Button" parent="SafeArea/Screen/Bottom/BottomPad/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 56)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/disabled = SubResource("StyleBoxFlat_disabled")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+action_mode = 0
+text = ""
+
+[node name="MinusRow" type="HBoxContainer" parent="SafeArea/Screen/Bottom/BottomPad/Actions/Minus"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="MinusIcon" type="Control" parent="SafeArea/Screen/Bottom/BottomPad/Actions/Minus/MinusRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("5_marks")
+kind = "minus"
+
+[node name="MinusCaption" type="Label" parent="SafeArea/Screen/Bottom/BottomPad/Actions/Minus/MinusRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 20
+text = "−1"
+
+[node name="Spacer" type="Control" parent="SafeArea/Screen/Bottom/BottomPad/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Undo" type="Button" parent="SafeArea/Screen/Bottom/BottomPad/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 56)
+layout_mode = 2
+focus_mode = 0
+theme_override_styles/disabled = SubResource("StyleBoxFlat_disabled")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_focus")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+action_mode = 0
+text = ""
+
+[node name="UndoRow" type="HBoxContainer" parent="SafeArea/Screen/Bottom/BottomPad/Actions/Undo"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="UndoIcon" type="Control" parent="SafeArea/Screen/Bottom/BottomPad/Actions/Undo/UndoRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("5_marks")
+kind = "undo"
+
+[node name="UndoCaption" type="Label" parent="SafeArea/Screen/Bottom/BottomPad/Actions/Undo/UndoRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 20
+text = "Undo"
+
+[node name="UnlockTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 0.6
+one_shot = true

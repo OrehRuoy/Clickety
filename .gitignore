@@ -1,0 +1,16 @@
+.godot/
+exports/
+build/
+screenshots/
+*.ipa
+*.apk
+*.aab
+*.pck
+*.exe
+*.xcframework
+ios/plugins/**/*.xcframework
+.mono/
+data_*/
+mono_crash.*.json
+*.translation
+*.mobileprovision

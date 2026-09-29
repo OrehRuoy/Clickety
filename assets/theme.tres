@@ -1,0 +1,20 @@
+[gd_resource type="Theme" load_steps=3 format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/AtkinsonHyperlegible-Regular.ttf" id="1_font"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_button"]
+
+[resource]
+default_font = ExtResource("1_font")
+default_font_size = 18
+Button/colors/font_color = Color(0.117647, 0.105882, 0.094118, 1)
+Button/colors/font_disabled_color = Color(0.368627, 0.337255, 0.305882, 1)
+Button/colors/font_focus_color = Color(0.117647, 0.105882, 0.094118, 1)
+Button/colors/font_hover_color = Color(0.117647, 0.105882, 0.094118, 1)
+Button/colors/font_pressed_color = Color(0.117647, 0.105882, 0.094118, 1)
+Button/styles/disabled = SubResource("StyleBoxEmpty_button")
+Button/styles/focus = SubResource("StyleBoxEmpty_button")
+Button/styles/hover = SubResource("StyleBoxEmpty_button")
+Button/styles/normal = SubResource("StyleBoxEmpty_button")
+Button/styles/pressed = SubResource("StyleBoxEmpty_button")
+Label/colors/font_color = Color(0.117647, 0.105882, 0.094118, 1)

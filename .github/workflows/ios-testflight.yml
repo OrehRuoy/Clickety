@@ -1,0 +1,305 @@
+name: iOS TestFlight
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_macos_export:
+        description: "Run macOS export + xcodebuild + TestFlight upload"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GODOT_VERSION: "4.6.3"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate project, preset, plugins (no secrets needed)
+        run: |
+          set -euo pipefail
+          test -f project.godot
+          test -f export_presets.cfg
+          grep -q 'name="iOS (TestFlight IPA)"' export_presets.cfg
+          grep -q 'textures/vram_compression/import_etc2_astc=true' project.godot \
+            || { echo "::error::Enable ETC2/ASTC (rendering/textures/vram_compression/import_etc2_astc=true) or iOS export fails"; exit 1; }
+          grep -q 'application/min_ios_version="15.0"' export_presets.cfg
+          grep -q 'application/export_project_only=true' export_presets.cfg
+          grep -q 'ITSAppUsesNonExemptEncryption' export_presets.cfg
+          if grep -q '<prefix>' export_presets.cfg scripts/ui/app_info.gd 2>/dev/null; then
+            echo "::error::Replace <prefix> in export_presets.cfg / app_info.gd"; exit 1
+          fi
+          if grep -q 'plugins/exported=' export_presets.cfg; then
+            echo "::error::Do not use plugins/exported= - use plugins/<Name>=true lines"; exit 1
+          fi
+          if find ios/plugins -name '*.gdip' -print0 2>/dev/null | xargs -0 -r grep -nE '^\s*#'; then
+            echo "::error::Remove # comments from .gdip files (use ;)"; exit 1
+          fi
+          on() { grep -q "^plugins/$1=true" export_presets.cfg; }
+          need() { test -f "$1" || { echo "::error::Missing $1 (required by the enabled plugin/widget)"; exit 1; }; }
+          if on StoreKit; then
+            need ios/plugins/storekit/StoreKit.gdip
+            need native/godot-storekit/src/storekit_plugin.mm
+            need native/godot-storekit/src/GodotPluginEntry.cpp
+            need native/build_plugins.sh
+          fi
+          if on WidgetBridge; then
+            need ios/plugins/widgetbridge/WidgetBridge.gdip
+            need native/godot-widgetbridge/src/widget_bridge.mm
+            need native/godot-widgetbridge/src/GodotPluginEntry.cpp
+            need native/build_plugins.sh
+          fi
+          if on NotificationSchedulerPlugin; then
+            need addons/NotificationSchedulerPlugin/plugin.cfg
+            need ios/plugins/NotificationSchedulerPlugin/NotificationSchedulerPlugin.gdip
+          fi
+          # Widget marker, bridge plugin and App Group entitlement must agree
+          if [ -f ios/widget/ENABLED ]; then
+            on WidgetBridge || { echo "::error::ios/widget/ENABLED exists but plugins/WidgetBridge=true is missing"; exit 1; }
+            grep -q 'com.apple.security.application-groups' export_presets.cfg || { echo "::error::Widget enabled but no App Group in entitlements/additional"; exit 1; }
+            grep -q 'ClicketyAppGroup' export_presets.cfg || { echo "::error::Widget enabled but ClicketyAppGroup plist key missing"; exit 1; }
+            need tools/ios/add_widget_target.rb
+            need tools/ios/check_signing.rb
+            need ios/widget/app/WidgetReload.swift
+          else
+            if on WidgetBridge; then echo "::error::plugins/WidgetBridge=true but ios/widget/ENABLED is missing (the bridge needs WidgetReload.swift in the app)"; exit 1; fi
+          fi
+          # No network / ads / analytics in game code. StoreKit lives in native/ only.
+          if grep -rnE 'HTTPRequest|HTTPClient|WebSocketPeer|StreamPeerTCP|PacketPeerUDP|ENetMultiplayerPeer|[Aa]d[Mm]ob|[Ff]irebase|[Cc]rashlytics|[Aa]pp[Ll]ovin|[Ss]entry' \
+               --include='*.gd' --include='*.tscn' scripts scenes 2>/dev/null; then
+            echo "::error::Network / ads / analytics code is not allowed in Clickety"; exit 1
+          fi
+          if [ -x tools/release_report.sh ]; then tools/release_report.sh; fi
+          echo "Preflight OK"
+
+      - name: Headless logic tests
+        run: |
+          set -euo pipefail
+          if ! ls tests/test_*.tscn >/dev/null 2>&1; then echo "No tests yet"; exit 0; fi
+          curl -fsSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -o "$RUNNER_TEMP/godot.zip"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP"
+          GODOT="$RUNNER_TEMP/Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+          chmod +x "$GODOT"
+          "$GODOT" --headless --path . --import || true
+          for t in tests/test_*.tscn; do
+            echo "== $t"
+            timeout 180 "$GODOT" --headless --path . "res://$t"
+          done
+
+  build-ios:
+    needs: preflight
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_macos_export }}
+    runs-on: macos-26
+    timeout-minutes: 90
+    env:
+      GODOT_VERSION: "4.6.3"
+      PRESET: "iOS (TestFlight IPA)"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read preset values
+        run: |
+          set -euo pipefail
+          UUID=$(sed -n 's/^application\/provisioning_profile_uuid_release="\([^"]*\)".*/\1/p' export_presets.cfg | tail -1)
+          BUNDLE_ID=$(sed -n 's/^application\/bundle_identifier="\([^"]*\)".*/\1/p' export_presets.cfg | head -1)
+          TEAM_ID=$(sed -n 's/^application\/app_store_team_id="\([^"]*\)".*/\1/p' export_presets.cfg | head -1)
+          APP_GROUP=$(sed -n 's/.*<key>ClicketyAppGroup<\/key><string>\([^<]*\)<\/string>.*/\1/p' export_presets.cfg | head -1)
+          WIDGET=0; [ -f ios/widget/ENABLED ] && WIDGET=1
+          {
+            echo "APP_UUID=$UUID"; echo "BUNDLE_ID=$BUNDLE_ID"; echo "TEAM_ID=$TEAM_ID"
+            echo "APP_GROUP=$APP_GROUP"; echo "WIDGET_ENABLED=$WIDGET"
+          } >> "$GITHUB_ENV"
+          echo "bundle=$BUNDLE_ID team=$TEAM_ID group=${APP_GROUP:-none} widget=$WIDGET uuid=$UUID"
+
+      - name: Check signing inputs (fail fast)
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+          APPLE_WIDGET_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_WIDGET_PROVISIONING_PROFILE_BASE64 }}
+          APPLE_ID_USERNAME: ${{ secrets.APPLE_ID_USERNAME }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+        run: |
+          missing=0
+          NEED="APPLE_CERTIFICATE_BASE64 APPLE_CERTIFICATE_PASSWORD APPLE_PROVISIONING_PROFILE_BASE64 APPLE_ID_USERNAME APPLE_ID_PASSWORD"
+          [ "$WIDGET_ENABLED" = "1" ] && NEED="$NEED APPLE_WIDGET_PROVISIONING_PROFILE_BASE64"
+          for v in $NEED; do
+            if [ -z "${!v:-}" ]; then echo "::error::Missing secret $v"; missing=1; fi
+          done
+          [ -z "$APP_UUID" ] && { echo "::error::provisioning_profile_uuid_release is empty in export_presets.cfg"; missing=1; }
+          [ -z "$BUNDLE_ID" ] && { echo "::error::bundle_identifier is empty"; missing=1; }
+          if [ "$WIDGET_ENABLED" = "1" ] && [ -z "$APP_GROUP" ]; then echo "::error::ClicketyAppGroup key missing from additional_plist_content"; missing=1; fi
+          exit $missing
+
+      - name: Select latest Xcode
+        run: |
+          LATEST=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$LATEST"
+          xcodebuild -version
+
+      - name: Setup Godot
+        run: |
+          curl -fsSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_macos.universal.zip" -o "$RUNNER_TEMP/godot.zip"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP"
+          echo "GODOT_BIN=$RUNNER_TEMP/Godot.app/Contents/MacOS/Godot" >> "$GITHUB_ENV"
+          curl -fsSL "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" -o "$RUNNER_TEMP/templates.tpz"
+          unzip -q "$RUNNER_TEMP/templates.tpz" -d "$RUNNER_TEMP"
+          TDIR="$HOME/Library/Application Support/Godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$TDIR"
+          cp "$RUNNER_TEMP/templates/ios.zip" "$TDIR/"
+
+      - name: Build native iOS plugins (only the enabled ones)
+        run: |
+          set -euo pipefail
+          if grep -qE '^plugins/(StoreKit|WidgetBridge)=true' export_presets.cfg; then
+            chmod +x native/build_plugins.sh
+            native/build_plugins.sh
+          else
+            echo "No native plugins enabled"
+          fi
+          if grep -q '^plugins/StoreKit=true' export_presets.cfg; then test -d ios/plugins/storekit/StoreKit.release.xcframework; fi
+          if grep -q '^plugins/WidgetBridge=true' export_presets.cfg; then test -d ios/plugins/widgetbridge/WidgetBridge.release.xcframework; fi
+
+      - name: Install Notification Scheduler iOS v5.2 (if enabled)
+        run: |
+          set -euo pipefail
+          if ! grep -q '^plugins/NotificationSchedulerPlugin=true' export_presets.cfg; then echo "Not enabled"; exit 0; fi
+          curl -fsSL -o "$RUNNER_TEMP/ns-ios.zip" \
+            "https://github.com/godot-mobile-plugins/godot-notification-scheduler/releases/download/v5.2/NotificationSchedulerPlugin-iOS-v5.2.zip"
+          unzip -q "$RUNNER_TEMP/ns-ios.zip" -d "$RUNNER_TEMP/ns-ios"
+          DEST="ios/plugins/NotificationSchedulerPlugin"
+          mkdir -p "$DEST"
+          find "$RUNNER_TEMP/ns-ios" -type d -name '*.xcframework' | while read -r fw; do
+            cp -R "$fw" "$DEST/"
+          done
+          find "$RUNNER_TEMP/ns-ios" -name '*.gdip' -exec cp {} "$DEST/" \;
+          test -f "$DEST/NotificationSchedulerPlugin.gdip"
+          test -d "$DEST/NotificationSchedulerPlugin.release.xcframework" \
+            || test -d "$DEST/NotificationSchedulerPlugin.xcframework"
+
+      - name: Import signing certificate
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > certificate.p12
+          KC_PASS=$(uuidgen)
+          security create-keychain -p "$KC_PASS" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KC_PASS" build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KC_PASS" build.keychain
+          rm certificate.p12
+
+      - name: Install provisioning profiles
+        env:
+          APPLE_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+          APPLE_WIDGET_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_WIDGET_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          set -euo pipefail
+          PDIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PDIR"
+          echo "$APPLE_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PDIR/${APP_UUID}.mobileprovision"
+          APP_PROFILE_NAME=$(security cms -D -i "$PDIR/${APP_UUID}.mobileprovision" 2>/dev/null | plutil -extract Name raw -)
+          echo "APP_PROFILE_NAME=$APP_PROFILE_NAME" >> "$GITHUB_ENV"
+          echo "App profile: $APP_PROFILE_NAME"
+          if [ "$WIDGET_ENABLED" = "1" ]; then
+            echo "$APPLE_WIDGET_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/widget.mobileprovision"
+            security cms -D -i "$RUNNER_TEMP/widget.mobileprovision" > "$RUNNER_TEMP/widget.plist" 2>/dev/null
+            W_UUID=$(plutil -extract UUID raw -o - "$RUNNER_TEMP/widget.plist")
+            W_NAME=$(plutil -extract Name raw -o - "$RUNNER_TEMP/widget.plist")
+            mv "$RUNNER_TEMP/widget.mobileprovision" "$PDIR/${W_UUID}.mobileprovision"
+            echo "WIDGET_PROFILE_NAME=$W_NAME" >> "$GITHUB_ENV"
+            echo "Widget profile: $W_NAME ($W_UUID)"
+          fi
+
+      - name: Set build number
+        run: sed -i '' "s|application/version=\"[^\"]*\"|application/version=\"${GITHUB_RUN_NUMBER}\"|" export_presets.cfg
+
+      - name: Export iOS Xcode project
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          grep 'application/export_project_only=' export_presets.cfg
+          "$GODOT_BIN" --headless --path . --import || true
+          "$GODOT_BIN" --headless --path . --export-release "$PRESET" "build/Clickety.ipa"
+          XCODEPROJ=$(find build -maxdepth 2 -name '*.xcodeproj' | head -1)
+          if [[ -z "$XCODEPROJ" ]]; then echo "ERROR: no .xcodeproj under build/"; find build -type d | head -50; exit 1; fi
+          test -f "$XCODEPROJ/project.pbxproj"
+          echo "XCODEPROJ=$XCODEPROJ" >> "$GITHUB_ENV"
+          echo "Xcode project: $XCODEPROJ"
+
+      - name: Patch app signing (BEFORE the widget target exists)
+        run: python3 tools/ios/patch_xcode_signing.py build "$APP_PROFILE_NAME"
+
+      - name: Setup Ruby (widget only)
+        if: ${{ hashFiles('ios/widget/ENABLED') != '' }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+
+      - name: Add widget extension target + check signing (widget only)
+        if: ${{ hashFiles('ios/widget/ENABLED') != '' }}
+        run: |
+          set -euo pipefail
+          gem install xcodeproj --no-document
+          ruby tools/ios/add_widget_target.rb "$XCODEPROJ" "${BUNDLE_ID}.widget" "$WIDGET_PROFILE_NAME" "$TEAM_ID" "$APP_GROUP"
+          ruby tools/ios/check_signing.rb "$XCODEPROJ" "$APP_PROFILE_NAME" "$WIDGET_PROFILE_NAME"
+
+      - name: Archive and export IPA
+        run: |
+          set -euo pipefail
+          SCHEME=$(basename "$XCODEPROJ" .xcodeproj)
+          ARCHIVE="build/${SCHEME}.xcarchive"
+          printf '%s\n' '{}' | plutil -convert xml1 -o build/ExportOptions.plist -
+          /usr/libexec/PlistBuddy -c "Add :method string app-store" build/ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :teamID string ${TEAM_ID}" build/ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :signingStyle string manual" build/ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" build/ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:${BUNDLE_ID} string ${APP_PROFILE_NAME}" build/ExportOptions.plist
+          if [ "$WIDGET_ENABLED" = "1" ]; then
+            /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:${BUNDLE_ID}.widget string ${WIDGET_PROFILE_NAME}" build/ExportOptions.plist
+          fi
+          /usr/libexec/PlistBuddy -c "Add :uploadSymbols bool true" build/ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :compileBitcode bool false" build/ExportOptions.plist
+          plutil -lint build/ExportOptions.plist
+          # NEVER pass PROVISIONING_PROFILE_SPECIFIER here: it would apply to every target.
+          xcodebuild \
+            -project "$XCODEPROJ" -scheme "$SCHEME" -sdk iphoneos -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$ARCHIVE" \
+            CODE_SIGN_IDENTITY="Apple Distribution" DEVELOPMENT_TEAM="${TEAM_ID}" \
+            STRIP_INSTALLED_PRODUCT=NO COPY_PHASE_STRIP=NO STRIP_STYLE=non-global \
+            archive
+          xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportPath build -exportOptionsPlist build/ExportOptions.plist
+          IPA=$(ls build/*.ipa | head -1)
+          test -n "$IPA"
+          if [ "$WIDGET_ENABLED" = "1" ]; then
+            unzip -l "$IPA" | grep -q 'Payload/.*\.app/PlugIns/ClicketyWidget\.appex/' \
+              || { echo "::error::ClicketyWidget.appex is missing from the IPA"; unzip -l "$IPA" | head -80; exit 1; }
+            echo "IPA contains PlugIns/ClicketyWidget.appex"
+          fi
+          ls -la build/*.ipa
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Clickety-ipa
+          path: build/*.ipa
+          retention-days: 7
+
+      - name: Upload to TestFlight
+        env:
+          APPLE_ID_USERNAME: ${{ secrets.APPLE_ID_USERNAME }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+        run: |
+          set -euo pipefail
+          IPA=$(ls build/*.ipa | head -1)
+          xcrun altool --upload-app -t ios -f "$IPA" -u "$APPLE_ID_USERNAME" -p "$APPLE_ID_PASSWORD" --verbose

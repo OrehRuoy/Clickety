@@ -1,0 +1,42 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Clickety"
+config/version="1.0.0"
+run/main_scene="res://scenes/counter.tscn"
+config/features=PackedStringArray("4.6", "Mobile")
+config/icon="res://assets/icon/icon_1024.png"
+boot_splash/bg_color=Color(0.984, 0.965, 0.933, 1)
+
+[autoload]
+
+WidgetSync="*res://scripts/autoload/widget_sync.gd"
+Feedback="*res://scripts/autoload/feedback.gd"
+Store="*res://scripts/autoload/store.gd"
+
+[gui]
+
+theme/custom="res://assets/theme.tres"
+
+[display]
+
+window/size/viewport_width=428
+window/size/viewport_height=926
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[rendering]
+
+renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
+environment/defaults/default_clear_color=Color(0.984, 0.965, 0.933, 1)

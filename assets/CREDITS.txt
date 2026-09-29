@@ -1,0 +1,2 @@
+assets/icon/icon_1024.png — self-made placeholder icon (cream field, terracotta tally tick and yarn-ball circle). No third-party art.
+assets/fonts/AtkinsonHyperlegible-Regular.ttf and AtkinsonHyperlegible-Bold.ttf — Atkinson Hyperlegible by the Braille Institute of America, licensed under the SIL Open Font License 1.1. See assets/fonts/OFL.txt.
