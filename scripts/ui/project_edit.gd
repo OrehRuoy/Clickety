@@ -35,8 +35,17 @@ func _ready() -> void:
 
 
 func _fit_column() -> void:
-	if is_inside_tree():
-		Layout.fit_column(%Column)
+	if not is_inside_tree():
+		return
+	%Scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var width: float = %Scroll.size.x
+	var bar: VScrollBar = %Scroll.get_v_scroll_bar()
+	if bar != null:
+		width = maxf(0.0, width - bar.custom_minimum_size.x)
+	width = minf(width, Layout.MAX_COLUMN_WIDTH)
+	%Column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if absf(%Column.custom_minimum_size.x - width) > 0.5:
+		%Column.custom_minimum_size.x = width
 
 
 func _load_fields() -> void:
@@ -204,6 +213,7 @@ func _paint_history() -> void:
 		var label := Label.new()
 		label.text = line
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.add_theme_font_size_override("font_size", 18)
 		%History.add_child(label)
 

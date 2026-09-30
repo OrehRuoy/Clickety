@@ -60,35 +60,63 @@ struct CountView: View {
     }
 
     var body: some View {
-        content
-            .widgetBackground(isAccessory: isAccessory, paper: paper)
-            .widgetURL(URL(string: "clickety://open"))
+        Group {
+            if opensCounter {
+                content
+                    .widgetBackground(isAccessory: isAccessory, paper: paper)
+                    .widgetURL(URL(string: "clickety://open"))
+            } else {
+                content
+                    .widgetBackground(isAccessory: isAccessory, paper: paper)
+            }
+        }
     }
 
     private var isAccessory: Bool {
         family == .accessoryInline || family == .accessoryCircular || family == .accessoryRectangular
     }
 
+    private var opensCounter: Bool {
+        guard let snap = entry.snap else { return true }
+        return snap.unlocked
+    }
+
     @ViewBuilder private var content: some View {
         if let s = entry.snap, s.unlocked {
             counted(s)
+        } else if entry.snap != nil {
+            lockedButton
         } else {
-            let msg = entry.snap == nil ? "Open Clickety" : "Unlock in Clickety"
-            switch family {
-            case .accessoryInline: Text(msg)
-            case .accessoryCircular: Image(systemName: "lock.fill")
-            default:
-                VStack(spacing: 8) {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 22, weight: .semibold))
-                        .frame(width: 48, height: 48)
-                        .background(Circle().fill(accent.opacity(0.16)))
-                        .foregroundColor(accent)
-                    Text(msg)
-                        .font(.system(.headline, design: .rounded))
-                        .foregroundColor(label)
-                        .multilineTextAlignment(.center)
-                }
+            lockedMessage("Open Clickety")
+        }
+    }
+
+    @ViewBuilder private var lockedButton: some View {
+        if #available(iOS 17.0, *) {
+            Button(intent: OpenUnlockIntent()) {
+                lockedMessage("Unlock in Clickety")
+            }
+            .buttonStyle(.plain)
+        } else {
+            lockedMessage("Unlock in Clickety")
+        }
+    }
+
+    @ViewBuilder private func lockedMessage(_ msg: String) -> some View {
+        switch family {
+        case .accessoryInline: Text(msg)
+        case .accessoryCircular: Image(systemName: "lock.fill")
+        default:
+            VStack(spacing: 8) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 22, weight: .semibold))
+                    .frame(width: 48, height: 48)
+                    .background(Circle().fill(accent.opacity(0.16)))
+                    .foregroundColor(accent)
+                Text(msg)
+                    .font(.system(.headline, design: .rounded))
+                    .foregroundColor(label)
+                    .multilineTextAlignment(.center)
             }
         }
     }

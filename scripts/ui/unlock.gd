@@ -204,7 +204,9 @@ func _on_back() -> void:
 
 func _leave(back: String) -> void:
 	var path := "res://scenes/projects.tscn"
-	if back == "counters":
+	if back == "counter":
+		path = "res://scenes/counter.tscn"
+	elif back == "counters":
 		path = "res://scenes/counters_edit.tscn"
 	elif back == "settings":
 		path = "res://scenes/settings.tscn"

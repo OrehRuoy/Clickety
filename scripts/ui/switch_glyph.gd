@@ -43,18 +43,16 @@ func _draw() -> void:
 	var radius := size.y * 0.5
 	if radius < 1.0:
 		return
-	var track: Color = palette["accent"] if _shown else palette["surface"]
-	var knob: Color = palette["accent_ink"] if _shown else palette["ink"]
-	if not _shown:
-		knob.a = 0.72
-		var rim: Color = palette["ink"]
-		rim.a = 0.22
-		_pill(rim, 0.0, radius)
-		_pill(track, 2.0, radius)
+	var accent: Color = palette["accent"]
+	var knob: Color = palette["accent_ink"] if _shown else accent
+	if _shown:
+		_pill(accent, 0.0, radius)
 	else:
-		_pill(track, 0.0, radius)
+		var cream: Color = palette["bg"]
+		_pill(accent, 0.0, radius)
+		_pill(cream, 3.0, radius)
 	var knob_x := size.x - radius if _shown else radius
-	draw_circle(Vector2(knob_x, radius), radius - 3.0, knob)
+	draw_circle(Vector2(knob_x, radius), radius - 4.0, knob)
 
 
 func _pill(color: Color, inset: float, radius: float) -> void:

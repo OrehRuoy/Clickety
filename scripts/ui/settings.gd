@@ -87,6 +87,7 @@ func _build() -> void:
 	if OS.is_debug_build() and not AppInfo.SCREENSHOT_MODE:
 		_choice(body, "Test notification in 1 minute", _on_test_reminder)
 		_choice(body, "Ask for a review", _on_ask_review)
+		_choice(body, "Preview enjoying question", _on_preview_enjoying)
 	_section(body, "Purchase")
 	_unlock = _choice(body, "Unlock", _on_unlock_row)
 	_choice(body, "Restore purchases", _on_restore)
@@ -313,6 +314,12 @@ func _on_test_reminder() -> void:
 
 func _on_ask_review() -> void:
 	Purchase.request_review()
+
+
+func _on_preview_enjoying() -> void:
+	var prompt: Object = (load("res://scripts/ui/enjoying.gd") as GDScript).new()
+	prompt.set("preview", true)
+	add_child(prompt)
 
 
 func _on_theme(theme_name: String) -> void:

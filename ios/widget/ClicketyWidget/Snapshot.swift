@@ -99,4 +99,18 @@ enum SharedStore {
             d.set(s, forKey: "pending")
         }
     }
+
+    /// Queues an unlock open for the app. The app reads pending the next time it comes forward.
+    static func requestUnlock() {
+        guard let d = defaults else { return }
+        var list: [[String: Any]] = []
+        if let s = d.string(forKey: "pending"), let data = s.data(using: .utf8),
+           let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+            list = arr
+        }
+        list.append(["route": "unlock", "t": Date().timeIntervalSince1970])
+        if let out = try? JSONSerialization.data(withJSONObject: list), let s = String(data: out, encoding: .utf8) {
+            d.set(s, forKey: "pending")
+        }
+    }
 }

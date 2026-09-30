@@ -7,6 +7,7 @@ var _note: TextEdit
 var _status: Label
 var _send: Button
 var _busy := false
+var preview := false
 
 
 func _ready() -> void:
@@ -38,7 +39,8 @@ func _ready() -> void:
 	_column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(_column)
 	_show_question()
-	AppSettings.mark_enjoying_asked()
+	if not preview:
+		AppSettings.mark_enjoying_asked()
 
 
 func _show_question() -> void:

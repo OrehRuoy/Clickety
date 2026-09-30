@@ -545,8 +545,12 @@ func merge_widget_pending() -> void:
 		return
 	pending.sort_custom(_pending_before)
 	var applied := false
+	var open_unlock := false
 	for entry in pending:
 		if typeof(entry) != TYPE_DICTIONARY:
+			continue
+		if str(entry.get("route", "")) == "unlock":
+			open_unlock = true
 			continue
 		var project_id := str(entry.get("project_id", ""))
 		var counter_id := str(entry.get("counter_id", ""))
@@ -561,6 +565,21 @@ func merge_widget_pending() -> void:
 		applied = true
 	if applied:
 		save_now()
+	if open_unlock and not Purchase.is_unlocked():
+		_open_unlock.call_deferred()
+
+
+func _open_unlock() -> void:
+	if Purchase.is_unlocked():
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	var current := tree.current_scene
+	if current != null and current.scene_file_path == "res://scenes/unlock.tscn":
+		return
+	Purchase.set_intent("", "counter")
+	tree.change_scene_to_file("res://scenes/unlock.tscn")
 
 
 func _pending_before(a: Variant, b: Variant) -> bool:

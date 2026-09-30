@@ -370,7 +370,7 @@ func _on_menu_pressed() -> void:
 		{"id": "restore", "text": "Restore purchases"},
 		{"id": "cancel", "text": "Cancel"},
 	]
-	_sheet.present("", rows)
+	_sheet.present("Menu", rows)
 
 
 func _on_lock_down() -> void:

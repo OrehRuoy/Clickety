@@ -15,3 +15,16 @@ struct IncrementIntent: AppIntent {
         return .result()
     }
 }
+
+/// The locked widget is one button. It asks the app to open Unlock, then brings Clickety forward.
+@available(iOS 17.0, *)
+struct OpenUnlockIntent: AppIntent {
+    static var title: LocalizedStringResource = "Unlock Clickety"
+    static var description = IntentDescription("Opens the Clickety purchase screen.")
+    static var openAppWhenRun: Bool = true
+
+    func perform() async throws -> some IntentResult {
+        SharedStore.requestUnlock()
+        return .result()
+    }
+}

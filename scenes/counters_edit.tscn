@@ -151,7 +151,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-placeholder_text = "Every N rows (2â€“200)"
+placeholder_text = "Every N rows (2-200)"
 alignment = 1
 
 [node name="Start" type="LineEdit" parent="SafeArea/Scroll/Column/Form"]

@@ -42,6 +42,7 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
 [node name="Column" type="VBoxContainer" parent="SafeArea/Scroll"]
 unique_name_in_owner = true
@@ -113,7 +114,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 22
 focus_mode = 0
 action_mode = 0
-text = "âˆ’"
+text = "-"
 
 [node name="Target" type="LineEdit" parent="SafeArea/Scroll/Column/TargetRow"]
 unique_name_in_owner = true
@@ -200,7 +201,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 focus_mode = 0
 action_mode = 0
-text = "Reset main counterâ€¦"
+text = "Reset main counter..."
 
 [node name="Delete" type="Button" parent="SafeArea/Scroll/Column"]
 unique_name_in_owner = true
@@ -209,7 +210,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 focus_mode = 0
 action_mode = 0
-text = "Delete projectâ€¦"
+text = "Delete project..."
 
 [node name="Archive" type="Button" parent="SafeArea/Scroll/Column"]
 unique_name_in_owner = true
