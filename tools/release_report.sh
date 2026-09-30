@@ -58,7 +58,8 @@ fi
 if grep -q 'Debug.visible = OS.is_debug_build()' scripts/ui/projects.gd \
 	&& grep -q 'if OS.is_debug_build() and not AppInfo.SCREENSHOT_MODE:' scripts/ui/settings.gd \
 	&& grep -q 'Test notification in 1 minute' scripts/ui/settings.gd \
-	&& grep -q 'Ask for a review' scripts/ui/settings.gd; then
+	&& grep -q 'Preview enjoying question' scripts/ui/settings.gd \
+	&& grep -q 'Leave a review' scripts/ui/settings.gd; then
 	pass "debug rows stay behind OS.is_debug_build()"
 else
 	bad "debug rows stay behind OS.is_debug_build()"
