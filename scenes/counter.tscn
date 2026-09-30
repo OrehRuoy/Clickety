@@ -321,6 +321,7 @@ autowrap_mode = 3
 
 [node name="Bottom" type="VBoxContainer" parent="SafeArea/Screen"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
 [node name="Divider" type="ColorRect" parent="SafeArea/Screen/Bottom"]
@@ -332,6 +333,7 @@ color = Color(0.368627, 0.337255, 0.305882, 1)
 
 [node name="BottomPad" type="MarginContainer" parent="SafeArea/Screen/Bottom"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 12
@@ -339,11 +341,12 @@ theme_override_constants/margin_bottom = 16
 
 [node name="Actions" type="HBoxContainer" parent="SafeArea/Screen/Bottom/BottomPad"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
 [node name="Minus" type="Button" parent="SafeArea/Screen/Bottom/BottomPad/Actions"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 56)
+custom_minimum_size = Vector2(132, 56)
 layout_mode = 2
 focus_mode = 0
 theme_override_styles/disabled = SubResource("StyleBoxFlat_disabled")
@@ -366,6 +369,7 @@ theme_override_constants/separation = 8
 alignment = 1
 
 [node name="MinusIcon" type="Control" parent="SafeArea/Screen/Bottom/BottomPad/Actions/Minus/MinusRow"]
+visible = false
 custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
 mouse_filter = 2
@@ -376,7 +380,7 @@ kind = "minus"
 layout_mode = 2
 mouse_filter = 2
 theme_override_font_sizes/font_size = 20
-text = "−1"
+text = "Minus 1"
 
 [node name="Spacer" type="Control" parent="SafeArea/Screen/Bottom/BottomPad/Actions"]
 layout_mode = 2
@@ -408,6 +412,7 @@ theme_override_constants/separation = 8
 alignment = 1
 
 [node name="UndoIcon" type="Control" parent="SafeArea/Screen/Bottom/BottomPad/Actions/Undo/UndoRow"]
+visible = false
 custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
 mouse_filter = 2

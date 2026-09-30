@@ -4,7 +4,7 @@ var _wordmark: TextureRect
 
 
 func _ready() -> void:
-	_wordmark = Mark.wordmark(168.0, 40.0)
+	_wordmark = Mark.wordmark(240.0, 68.0)
 	%Column.add_child(_wordmark)
 	%Column.move_child(_wordmark, 1)
 	%Back.pressed.connect(_on_back)
@@ -28,7 +28,7 @@ func _on_appearance(key: String) -> void:
 	if key != "theme" and key != "text_size":
 		return
 	%Background.color = Palette.current()["bg"]
-	_wordmark.modulate = Palette.current()["ink"]
+	Mark.refresh_wordmark(_wordmark)
 	Palette.paint_back(%Back)
 	_fill()
 

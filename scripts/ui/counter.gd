@@ -105,6 +105,7 @@ func _ready() -> void:
 	_linked.visible = false
 	_set_awake(true)
 	_refresh()
+	_maybe_enjoying()
 	if OS.is_debug_build():
 		var project := Store.active_project()
 		var counter := _main_counter(project)
@@ -113,6 +114,13 @@ func _ready() -> void:
 			counter.get("name", ""),
 			int(counter.get("value", 0)),
 		])
+
+
+func _maybe_enjoying() -> void:
+	if AppInfo.SCREENSHOT_MODE or not AppSettings.enjoying_due():
+		return
+	var prompt: Node = (load("res://scripts/ui/enjoying.gd") as GDScript).new()
+	add_child(prompt)
 
 
 func _exit_tree() -> void:
@@ -174,12 +182,14 @@ func _paint_bottom() -> void:
 
 func _style_corner(button: Button, live: bool) -> void:
 	var palette := Palette.current()
-	var ink: Color = palette["accent"] if live else palette["muted"]
+	var ink: Color = palette["ink"] if live else palette["muted"]
 	var box := StyleBoxFlat.new()
 	box.set_corner_radius_all(16)
 	box.bg_color = palette["surface"]
-	box.border_color = ink
-	box.set_border_width_all(2)
+	var border: Color = palette["ink"]
+	border.a = 0.16 if live else 0.1
+	box.border_color = border
+	box.set_border_width_all(1)
 	box.content_margin_left = 12
 	box.content_margin_right = 12
 	box.content_margin_top = 8
@@ -426,10 +436,19 @@ func _set_awake(on: bool) -> void:
 
 func _apply_hands() -> void:
 	var actions := _minus.get_parent()
-	if AppSettings.flag("swap_hands"):
-		actions.move_child(_undo, 0)
-	else:
-		actions.move_child(_minus, 0)
+	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var spacer := actions.get_node_or_null("Spacer") as Control
+	if spacer != null:
+		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_minus.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_undo.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var swapped := AppSettings.flag("swap_hands")
+	var first: Node = _undo if swapped else _minus
+	var second: Node = _minus if swapped else _undo
+	actions.move_child(first, 0)
+	if spacer != null:
+		actions.move_child(spacer, 1)
+	actions.move_child(second, -1)
 
 
 func _on_settings_changed(_key: String) -> void:

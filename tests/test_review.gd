@@ -27,4 +27,14 @@ func _run() -> String:
 		return "FAIL: the new year did not start at 1"
 	if ReviewGate.next_count(now, now - 61 * 86400, 2) != 3:
 		return "FAIL: the same year did not increment"
+	if ReviewGate.enjoying_due(now, now, 5, false):
+		return "FAIL: asked on the install day"
+	if ReviewGate.enjoying_due(now, now - 5 * 86400, 2, false):
+		return "FAIL: asked before the third open"
+	if not ReviewGate.enjoying_due(now, now - 5 * 86400, 3, false):
+		return "FAIL: the third open on a later day was blocked"
+	if not ReviewGate.enjoying_due(now, now - 5 * 86400, 10, false):
+		return "FAIL: later opens on a later day were blocked"
+	if ReviewGate.enjoying_due(now, now - 5 * 86400, 10, true):
+		return "FAIL: asked again after an answer"
 	return "PASS"

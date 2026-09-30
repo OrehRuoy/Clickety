@@ -24,7 +24,7 @@ func _ready() -> void:
 func _paint() -> void:
 	var palette := Palette.current()
 	%Background.color = palette["bg"]
-	_wordmark.modulate = palette["ink"]
+	Mark.refresh_wordmark(_wordmark)
 	%Copy.add_theme_color_override("font_color", palette["ink"])
 	%Credits.add_theme_color_override("font_color", palette["muted"])
 	%Version.add_theme_color_override("font_color", palette["muted"])

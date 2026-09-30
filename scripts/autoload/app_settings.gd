@@ -24,6 +24,7 @@ func _ready() -> void:
 		save_to_dir(DATA_DIR, _data)
 	_apply_theme()
 	get_tree().node_added.connect(AppTheme.on_node_added)
+	note_launch()
 
 
 func flag(key: String) -> bool:
@@ -88,6 +89,31 @@ func mark_review(now: int) -> void:
 	_data["review_last"] = now
 	_data["review_count"] = count
 	_store("review_last")
+
+
+func launch_count() -> int:
+	return int(_data.get("launch_count", 0))
+
+
+func note_launch() -> void:
+	_data["launch_count"] = launch_count() + 1
+	_store("launch_count")
+
+
+func enjoying_due() -> bool:
+	return ReviewGate.enjoying_due(
+		int(Time.get_unix_time_from_system()),
+		installed_at(),
+		launch_count(),
+		int(_data.get("enjoying_asked", 0)) > 0
+	)
+
+
+func mark_enjoying_asked() -> void:
+	if int(_data.get("enjoying_asked", 0)) > 0:
+		return
+	_data["enjoying_asked"] = 1
+	_store("enjoying_asked")
 
 
 func number(key: String) -> int:
@@ -168,6 +194,8 @@ static func _normalize(raw: Dictionary) -> Dictionary:
 		"installed_at": 0,
 		"review_last": 0,
 		"review_count": 0,
+		"launch_count": 0,
+		"enjoying_asked": 0,
 	}
 	for key in FLAGS:
 		if typeof(raw.get(key)) == TYPE_BOOL:
@@ -183,6 +211,8 @@ static func _normalize(raw: Dictionary) -> Dictionary:
 	out["installed_at"] = _non_negative(raw, "installed_at")
 	out["review_last"] = _non_negative(raw, "review_last")
 	out["review_count"] = _non_negative(raw, "review_count")
+	out["launch_count"] = _non_negative(raw, "launch_count")
+	out["enjoying_asked"] = 1 if _non_negative(raw, "enjoying_asked") > 0 else 0
 	return out
 
 

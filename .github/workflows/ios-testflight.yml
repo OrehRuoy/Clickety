@@ -72,9 +72,13 @@ jobs:
           else
             if on WidgetBridge; then echo "::error::plugins/WidgetBridge=true but ios/widget/ENABLED is missing (the bridge needs WidgetReload.swift in the app)"; exit 1; fi
           fi
-          # No network / ads / analytics in game code. StoreKit lives in native/ only.
-          if grep -rnE 'HTTPRequest|HTTPClient|WebSocketPeer|StreamPeerTCP|PacketPeerUDP|ENetMultiplayerPeer|[Aa]d[Mm]ob|[Ff]irebase|[Cc]rashlytics|[Aa]pp[Ll]ovin|[Ss]entry' \
-               --include='*.gd' --include='*.tscn' scripts scenes 2>/dev/null; then
+          # No network / ads / analytics in game code, except the optional feedback form.
+          # StoreKit lives in native/ only.
+          net_hits="$(grep -RInE 'HTTPRequest|HTTPClient|WebSocketPeer|StreamPeerTCP|PacketPeerUDP|ENetMultiplayerPeer|[Aa]d[Mm]ob|[Ff]irebase|[Cc]rashlytics|[Aa]pp[Ll]ovin|[Ss]entry' \
+               --include='*.gd' --include='*.tscn' scripts scenes || true)"
+          net_hits="$(printf '%s\n' "$net_hits" | grep -v '^scripts/ui/enjoying.gd:' || true)"
+          if [ -n "$net_hits" ]; then
+            printf '%s\n' "$net_hits"
             echo "::error::Network / ads / analytics code is not allowed in Clickety"; exit 1
           fi
           if [ -x tools/release_report.sh ]; then tools/release_report.sh; fi

@@ -15,7 +15,6 @@ var edit_return := "counter"
 var counters_return := "project"
 var open_alert_form := false
 var _pending_alert_texts: Array = []
-var _session_repeat_wraps := 0
 
 
 func _ready() -> void:
@@ -428,7 +427,7 @@ func _mutate(counter_id: String, kind: String) -> void:
 		_raise_alerts(project, result)
 
 
-func _apply(project: Dictionary, result: Dictionary, kind: String = "") -> void:
+func _apply(project: Dictionary, result: Dictionary, _kind: String = "") -> void:
 	if bool(result.get("blocked", false)):
 		return
 	var delta: Dictionary = result.get("changed", {})
@@ -440,40 +439,6 @@ func _apply(project: Dictionary, result: Dictionary, kind: String = "") -> void:
 	if not wrapped_ids.is_empty():
 		wrapped.emit(str(project.get("id", "")), wrapped_ids)
 	_maybe_refresh_reminder(delta)
-	if kind == "tap" or kind == "widget":
-		_maybe_review(project, delta, wrapped_ids)
-
-
-func _maybe_review(project: Dictionary, delta: Dictionary, wrapped_ids: Array) -> void:
-	var ask := false
-	var main_id := ""
-	for counter in project.get("counters", []):
-		if typeof(counter) == TYPE_DICTIONARY and str(counter.get("role", "")) == "main":
-			main_id = str(counter.get("id", ""))
-			break
-	var target := int(project.get("target", 0))
-	if main_id != "" and target > 0 and delta.has(main_id):
-		var pair = delta[main_id]
-		if typeof(pair) == TYPE_ARRAY and pair.size() >= 2 and int(pair[0]) < target and int(pair[1]) >= target:
-			ask = true
-	for wrapped_id in wrapped_ids:
-		if not _followed_on_wrap(project, str(wrapped_id)):
-			continue
-		_session_repeat_wraps += 1
-		if _session_repeat_wraps == 3:
-			ask = true
-	if ask:
-		Purchase.consider_review()
-
-
-func _followed_on_wrap(project: Dictionary, counter_id: String) -> bool:
-	for counter in project.get("counters", []):
-		if typeof(counter) != TYPE_DICTIONARY:
-			continue
-		var link = counter.get("link", {})
-		if typeof(link) == TYPE_DICTIONARY and str(link.get("to", "")) == counter_id and str(link.get("on", "")) == "wrap":
-			return true
-	return false
 
 
 func take_alert_texts() -> Array:

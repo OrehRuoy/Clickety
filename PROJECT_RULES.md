@@ -16,8 +16,8 @@ ENGINE / PLATFORM
 PRODUCT LOCKS (v1)
 - Free: 1 project with its main counter + undo/-1 + notes + history + keep-awake + haptics + backup/export. Unlock (one non-consumable IAP): unlimited projects, linked/repeat counters, widget, reminders. Nothing that is free today ever becomes paid later.
 - NEVER RE-LOCK: once unlocked on a device, the cached entitlement stays true forever. No code path sets it false in release builds. StoreKit failure/offline never locks.
-- NO subscriptions, trials, ads, ad SDKs, accounts/login, analytics/crash SDKs, Firebase, iCloud, backend. NO network code (HTTPRequest, HTTPClient, WebSocketPeer, StreamPeerTCP, PacketPeerUDP, ENet, MultiplayerAPI). The only network is Apple StoreKit inside the native plugin.
-- NO onboarding quiz, NO forced tutorial, NO nag screens, NO paywall on launch. The app opens straight to a counter you can tap.
+- NO subscriptions, trials, ads, ad SDKs, accounts/login, analytics/crash SDKs, Firebase, iCloud, backend. NO network code (HTTPRequest, HTTPClient, WebSocketPeer, StreamPeerTCP, PacketPeerUDP, ENet, MultiplayerAPI) except scripts/ui/enjoying.gd, which posts optional feedback to Web3Forms. The other network use is Apple StoreKit inside the native plugin.
+- NO onboarding quiz, NO forced tutorial, NO paywall on launch. The app opens straight to a counter you can tap. The one prompt is "Are you enjoying Clickety?": the 3rd open or later, never on the install day, and only once.
 - Screenshots/metadata never show prices, "$", "Free", "sale", "#1", "best", or competitor names.
 - NO volume-button counting (App Review 2.5.9 rejects apps that alter the Volume buttons). NO PDF patterns, Ravelry, Apple Watch, voice, sync in v1 (parking lot).
 

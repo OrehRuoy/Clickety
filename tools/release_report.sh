@@ -8,13 +8,14 @@ fail=0
 pass() { echo "PASS  $1"; }
 bad() { echo "FAIL  $1"; fail=1; }
 
-if grep -RInE 'HTTPRequest|HTTPClient|WebSocketPeer|StreamPeerTCP|PacketPeerUDP|ENetMultiplayerPeer|MultiplayerAPI' \
-	--include='*.gd' --include='*.tscn' scripts scenes >/dev/null; then
-	grep -RInE 'HTTPRequest|HTTPClient|WebSocketPeer|StreamPeerTCP|PacketPeerUDP|ENetMultiplayerPeer|MultiplayerAPI' \
-		--include='*.gd' --include='*.tscn' scripts scenes || true
-	bad "no network classes in scripts/ or scenes/"
+net_hits="$(grep -RInE 'HTTPRequest|HTTPClient|WebSocketPeer|StreamPeerTCP|PacketPeerUDP|ENetMultiplayerPeer|MultiplayerAPI' \
+	--include='*.gd' --include='*.tscn' scripts scenes || true)"
+net_hits="$(printf '%s\n' "$net_hits" | grep -v '^scripts/ui/enjoying.gd:' || true)"
+if [ -n "$net_hits" ]; then
+	printf '%s\n' "$net_hits"
+	bad "network classes stay in the feedback form only"
 else
-	pass "no network classes in scripts/ or scenes/"
+	pass "network classes stay in the feedback form only"
 fi
 
 shell_bad=0

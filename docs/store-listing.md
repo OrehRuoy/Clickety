@@ -57,7 +57,7 @@ EVERY PROJECT IN ITS PLACE
 YOUR COUNTS STAY YOURS
 • Every tap is saved instantly, with a backup copy
 • Save a backup file to Files and restore it on a new phone
-• Nothing is collected, nothing is tracked
+• No ads, no account, no tracking. Feedback is sent only if you tap Send.
 
 Large text sizes, three themes including high contrast, for iPhone and iPad.
 ```
@@ -98,7 +98,7 @@ Answer None or No to every question. The expected result is 4+.
 
 ## App Privacy
 
-Data Not Collected.
+No longer "Data Not Collected" once the feedback form ships. In the questionnaire, add Customer Support data: the feedback note, app version, and device system. It is not linked to identity and not used for tracking. It is sent only when someone taps Send. Republish docs/privacy.html before review.
 
 ## What's New
 
@@ -134,7 +134,7 @@ To test linked counters after unlocking: ⋯ → Project details → Counters �
 
 Reminders: ⋯ → Settings → Reminders. Notification permission is requested only when the user turns it on.
 
-No data leaves the device. The only network use is Apple's StoreKit for the purchase.
+Counts stay on the device. StoreKit is used for the purchase and restore. If someone answers No to "Are you enjoying Clickety?" and taps Send, that note plus the app version and system are sent to the developer. Nothing is sent unless they tap Send. The question appears once, on the 3rd open or later, and never on the first day.
 ```
 
 No sign-in is required.

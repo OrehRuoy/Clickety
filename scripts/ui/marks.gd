@@ -29,17 +29,49 @@ static func icon(kind: String, tint: Color, side: float) -> Control:
 	return rect
 
 
+static var _wordmark_base: Image
+static var _wordmark_cache := {}
+
+
 static func wordmark(width: float, height: float) -> TextureRect:
 	var rect := TextureRect.new()
-	rect.texture = load("res://assets/marks/wordmark.png") as Texture2D
-	rect.modulate = Palette.current()["ink"]
 	rect.custom_minimum_size = Vector2(width, height)
 	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	rect.accessibility_name = AppInfo.DISPLAY_NAME
+	refresh_wordmark(rect)
 	return rect
+
+
+static func refresh_wordmark(rect: TextureRect) -> void:
+	rect.texture = _colored_wordmark()
+	rect.modulate = Color.WHITE
+
+
+static func _colored_wordmark() -> Texture2D:
+	var palette := Palette.current()
+	var ink: Color = palette["ink"]
+	var accent: Color = palette["accent"]
+	var key := "%s|%s" % [ink.to_html(false), accent.to_html(false)]
+	if _wordmark_cache.has(key):
+		return _wordmark_cache[key]
+	if _wordmark_base == null:
+		var source := load("res://assets/marks/wordmark.png") as Texture2D
+		_wordmark_base = source.get_image()
+	var image := _wordmark_base.duplicate()
+	for y in image.get_height():
+		for x in image.get_width():
+			var pixel: Color = image.get_pixel(x, y)
+			if pixel.a < 0.04:
+				continue
+			var next: Color = accent if pixel.r > pixel.g + 0.12 and pixel.r > pixel.b + 0.12 else ink
+			next.a = pixel.a
+			image.set_pixel(x, y, next)
+	var texture := ImageTexture.create_from_image(image)
+	_wordmark_cache[key] = texture
+	return texture
 
 
 static func show_lock(button: Button, show: bool, is_locked: bool = true) -> void:

@@ -26,7 +26,21 @@ static func next_count(now: int, review_last: int, review_count: int) -> int:
 	return review_count + 1
 
 
+static func enjoying_due(now: int, installed_at: int, launch_count: int, asked: bool) -> bool:
+	if asked or launch_count < 3 or installed_at <= 0:
+		return false
+	return local_day(now) != local_day(installed_at)
+
+
+static func local_day(unix_time: int) -> String:
+	var when := _local(unix_time)
+	return "%04d-%02d-%02d" % [int(when.get("year", 0)), int(when.get("month", 0)), int(when.get("day", 0))]
+
+
 static func _year(unix_time: int) -> int:
+	return int(_local(unix_time).get("year", 0))
+
+
+static func _local(unix_time: int) -> Dictionary:
 	var bias := int(Time.get_time_zone_from_system().get("bias", 0))
-	var when := Time.get_datetime_dict_from_unix_time(unix_time + bias * 60)
-	return int(when.get("year", 0))
+	return Time.get_datetime_dict_from_unix_time(unix_time + bias * 60)

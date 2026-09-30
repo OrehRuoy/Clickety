@@ -61,7 +61,7 @@ func _paint_theme() -> void:
 	%Error.add_theme_color_override("font_color", palette["accent"])
 	%ErrorDetail.add_theme_color_override("font_color", palette["muted"])
 	%Title.add_theme_color_override("font_color", palette["ink"])
-	_wordmark.modulate = palette["ink"]
+	Mark.refresh_wordmark(_wordmark)
 	if _mark is TextureRect:
 		_mark.modulate = palette["accent"]
 	var card := StyleBoxFlat.new()
