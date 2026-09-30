@@ -36,6 +36,7 @@ var _pulse: Tween
 var _wash: TextureRect
 var _banner_timer: Timer
 var _counting: Label
+var _wash_settle := 0
 
 
 func _ready() -> void:
@@ -105,6 +106,8 @@ func _ready() -> void:
 	_linked.visible = false
 	_set_awake(true)
 	_refresh()
+	_wash_settle = 20
+	set_process(true)
 	_maybe_enjoying()
 	if OS.is_debug_build():
 		var project := Store.active_project()
@@ -114,6 +117,14 @@ func _ready() -> void:
 			counter.get("name", ""),
 			int(counter.get("value", 0)),
 		])
+
+
+func _process(_delta: float) -> void:
+	if _wash_settle <= 0:
+		set_process(false)
+		return
+	_wash_settle -= 1
+	_place_wash()
 
 
 func _maybe_enjoying() -> void:

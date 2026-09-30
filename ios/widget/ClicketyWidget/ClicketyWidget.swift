@@ -68,6 +68,7 @@ struct CountView: View {
             } else {
                 content
                     .widgetBackground(isAccessory: isAccessory, paper: paper)
+                    .widgetURL(URL(string: "clickety://unlock"))
             }
         }
     }
@@ -85,20 +86,9 @@ struct CountView: View {
         if let s = entry.snap, s.unlocked {
             counted(s)
         } else if entry.snap != nil {
-            lockedButton
+            lockedMessage("Unlock in Clickety")
         } else {
             lockedMessage("Open Clickety")
-        }
-    }
-
-    @ViewBuilder private var lockedButton: some View {
-        if #available(iOS 17.0, *) {
-            Button(intent: OpenUnlockIntent()) {
-                lockedMessage("Unlock in Clickety")
-            }
-            .buttonStyle(.plain)
-        } else {
-            lockedMessage("Unlock in Clickety")
         }
     }
 

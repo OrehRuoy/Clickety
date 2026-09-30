@@ -25,6 +25,7 @@ var _reminder: Label
 var _unlock: Button
 var _status: Label
 var _saved: Label
+var _review_note: Label
 var _sections: Array[Label] = []
 var _rows: Array[Button] = []
 var _theme_buttons := {}
@@ -86,7 +87,6 @@ func _build() -> void:
 	_reminder.visible = false
 	if OS.is_debug_build() and not AppInfo.SCREENSHOT_MODE:
 		_choice(body, "Test notification in 1 minute", _on_test_reminder)
-		_choice(body, "Ask for a review", _on_ask_review)
 		_choice(body, "Preview enjoying question", _on_preview_enjoying)
 	_section(body, "Purchase")
 	_unlock = _choice(body, "Unlock", _on_unlock_row)
@@ -99,6 +99,9 @@ func _build() -> void:
 	_saved = _label(body, "")
 	_saved.visible = false
 	_section(body, "About")
+	_choice(body, "Leave a review", _on_leave_review)
+	_review_note = _label(body, "")
+	_review_note.visible = false
 	_choice(body, "About", _on_about)
 
 
@@ -170,6 +173,8 @@ func _paint() -> void:
 		_status.add_theme_color_override("font_color", palette["muted"])
 	if _saved != null:
 		_saved.add_theme_color_override("font_color", palette["muted"])
+	if _review_note != null:
+		_review_note.add_theme_color_override("font_color", palette["muted"])
 	if _time != null:
 		_time.text = _clock_text()
 	if _reminder != null:
@@ -312,8 +317,12 @@ func _on_test_reminder() -> void:
 	NotifyService.test_soon()
 
 
-func _on_ask_review() -> void:
+func _on_leave_review() -> void:
 	Purchase.request_review()
+	if OS.get_name() == "iOS" or _review_note == null:
+		return
+	_review_note.text = "The review sheet opens in the iPhone app."
+	_review_note.visible = true
 
 
 func _on_preview_enjoying() -> void:

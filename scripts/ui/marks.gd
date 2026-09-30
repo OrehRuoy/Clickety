@@ -95,6 +95,9 @@ static func show_lock(button: Button, show: bool, is_locked: bool = true) -> voi
 
 
 func _draw() -> void:
+	if kind == "minus":
+		_draw_minus()
+		return
 	var palette := Palette.current()
 	var file := kind
 	var tint: Color = palette["ink"]
@@ -104,7 +107,7 @@ func _draw() -> void:
 		"lock":
 			file = "lock" if locked else "unlock"
 			tint = palette["accent"] if locked else palette["ink"]
-		"minus", "undo":
+		"undo":
 			tint = Color.WHITE
 		"menu", "needles", "hook":
 			pass
@@ -114,6 +117,18 @@ func _draw() -> void:
 	if texture == null:
 		return
 	draw_texture_rect(texture, Rect2(Vector2.ZERO, size), false, tint)
+
+
+func _draw_minus() -> void:
+	var side := minf(size.x, size.y)
+	if side < 2.0:
+		return
+	var center := size * 0.5
+	var radius := side * 0.38
+	var stroke := maxf(1.6, side * 0.09)
+	draw_arc(center, radius, 0.0, TAU, 48, Color.WHITE, stroke, true)
+	var bar := radius * 0.72
+	draw_line(center - Vector2(bar, 0.0), center + Vector2(bar, 0.0), Color.WHITE, stroke, true)
 
 
 static var _cache := {}

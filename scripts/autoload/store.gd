@@ -25,6 +25,8 @@ func _ready() -> void:
 		create_project("My project", "knit")
 	_prune_deleted()
 	merge_widget_pending()
+	if OS.get_name() == "iOS":
+		get_tree().create_timer(0.4).timeout.connect(merge_widget_pending)
 	Backup.keep_daily("user://", _data)
 
 

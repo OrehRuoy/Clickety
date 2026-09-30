@@ -11,18 +11,25 @@ var preview := false
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	z_index = 20
+	_fill(self)
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.45)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	dim.gui_input.connect(_on_dim)
 	add_child(dim)
+	_fill(dim)
 	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
+	_fill(center)
+	resized.connect(_fill.bind(self))
+	resized.connect(_fill.bind(dim))
+	resized.connect(_fill.bind(center))
+	call_deferred("_fill", self)
+	call_deferred("_fill", dim)
+	call_deferred("_fill", center)
 	var card := PanelContainer.new()
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var width := minf(360.0, get_viewport_rect().size.x - 48.0)
@@ -41,6 +48,19 @@ func _ready() -> void:
 	_show_question()
 	if not preview:
 		AppSettings.mark_enjoying_asked()
+
+
+func _fill(node: Control) -> void:
+	node.layout_mode = Control.LAYOUT_MODE_ANCHORS
+	node.set_anchors_preset(Control.PRESET_FULL_RECT)
+	node.offset_left = 0.0
+	node.offset_top = 0.0
+	node.offset_right = 0.0
+	node.offset_bottom = 0.0
+	var parent_control := node.get_parent() as Control
+	if parent_control != null and parent_control.size.x > 1.0:
+		node.position = Vector2.ZERO
+		node.size = parent_control.size
 
 
 func _show_question() -> void:

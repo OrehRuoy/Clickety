@@ -355,6 +355,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
 action_mode = 0
+clip_contents = true
 text = ""
 
 [node name="MinusRow" type="HBoxContainer" parent="SafeArea/Screen/Bottom/BottomPad/Actions/Minus"]
@@ -369,9 +370,10 @@ theme_override_constants/separation = 8
 alignment = 1
 
 [node name="MinusIcon" type="Control" parent="SafeArea/Screen/Bottom/BottomPad/Actions/Minus/MinusRow"]
-visible = false
 custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("5_marks")
 kind = "minus"
@@ -379,8 +381,8 @@ kind = "minus"
 [node name="MinusCaption" type="Label" parent="SafeArea/Screen/Bottom/BottomPad/Actions/Minus/MinusRow"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 20
-text = "Minus 1"
+theme_override_font_sizes/font_size = 22
+text = "-1"
 
 [node name="Spacer" type="Control" parent="SafeArea/Screen/Bottom/BottomPad/Actions"]
 layout_mode = 2
