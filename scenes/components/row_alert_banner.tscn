@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/row_alert_banner.gd" id="1_banner"]
+
+[node name="RowAlertBanner" type="Button"]
+custom_minimum_size = Vector2(0, 88)
+focus_mode = 0
+action_mode = 0
+alignment = 0
+autowrap_mode = 3
+script = ExtResource("1_banner")

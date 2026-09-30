@@ -26,7 +26,7 @@
 | App bundle ID | `com.<prefix>.rowcounter`. Generic on purpose, so it survives a store-name change. |
 | Widget extension bundle ID | `com.<prefix>.rowcounter.widget` (Step 1) |
 | App Group | `group.com.<prefix>.rowcounter` (Step 1) |
-| IAP product ID (non-consumable) | `com.<prefix>.clickety.unlock` (Step 6). Product IDs can never be reused, even after deletion. |
+| IAP product ID (non-consumable) | `com.<prefix>.rowcounter.unlock` (Step 6). Product IDs can never be reused, even after deletion. |
 | ASC SKU | `clickety-ios` |
 | Team | `9WRNQYQZTB` (same as Oil Due / Taptico) |
 
@@ -73,7 +73,7 @@
 11. `[C]` **Step 4:** projects list + project details.
 12. `[C]` **Step 5:** linked / repeat counters.
 13. `[B]` **ASC → your app → Monetization → In-App Purchases → + Non-Consumable:**
-    - Product ID `com.<prefix>.clickety.unlock`, reference name `Clickety Unlock`, display name "Unlock Clickety".
+    - Product ID `com.<prefix>.rowcounter.unlock`, reference name `Clickety Unlock`, display name "Unlock Clickety".
     - Pick the price tier (the plan is the $3.99 tier; the price never appears in screenshots or metadata).
     - Add a review screenshot of the Unlock screen after Step 6.
     - Family Sharing: **decide before you save.** You can turn it on later but never off. Recommended: on (trust). **Verify** the toggle behavior in ASC.
@@ -138,7 +138,7 @@ CLICKETY PROJECT RULES — read before every step. If a step prompt and these ru
 IDENTITY
 - Codename Clickety: folder, repo OrehRuoy/Clickety, project.godot config/name, window title.
 - Store title is "Clickety: Knitting Row Counter" (App Store Connect only). Every user-facing app name inside the app reads from scripts/ui/app_info.gd (DISPLAY_NAME = "Clickety"). Never hardcode a store name anywhere else.
-- Bundle id com.<prefix>.rowcounter; widget com.<prefix>.rowcounter.widget; App Group group.com.<prefix>.rowcounter; IAP product id com.<prefix>.clickety.unlock. All live in scripts/ui/app_info.gd (and CI reads bundle id from export_presets.cfg). They never change after first upload.
+- Bundle id com.<prefix>.rowcounter; widget com.<prefix>.rowcounter.widget; App Group group.com.<prefix>.rowcounter; IAP product id com.<prefix>.rowcounter.unlock. All live in scripts/ui/app_info.gd (and CI reads bundle id from export_presets.cfg). They never change after first upload.
 
 ENGINE / PLATFORM
 - Godot 4.6.3 stable, GDScript only (no C#), 2D, renderer "mobile". CI GODOT_VERSION must match exactly.
@@ -558,7 +558,7 @@ When done: PLAN.md step log line + my test list.
 ---
 ## Step 6 — IAP unlock + Restore purchases (StoreKit plugin from Oil Due)
 
-**Goal:** one non-consumable, `com.<prefix>.clickety.unlock`, bought once and restored anywhere, and never re-locked. It reuses Oil Due's StoreKit 1 plugin, built in CI. The only change is that the hardcoded product ID becomes a value passed in.
+**Goal:** one non-consumable, `com.<prefix>.rowcounter.unlock`, bought once and restored anywhere, and never re-locked. It reuses Oil Due's StoreKit 1 plugin, built in CI. The only change is that the hardcoded product ID becomes a value passed in.
 
 **Before you paste (you):** checklist item 13 is done, so the IAP exists in ASC with status "Ready to Submit" or "Missing Metadata". A sandbox tester exists (ASC → Users and Access → Sandbox → Test Accounts), or you use your own Apple ID in TestFlight, where purchases are free sandbox purchases (**verify**).
 
@@ -575,7 +575,7 @@ FACTS ABOUT THE OIL DUE PLUGIN (read from OrehRuoy/OilDue today; confirm against
 
 WHAT TO BUILD
 1. native/godot-storekit/ (the only edits allowed in the copied plugin):
-   - g_product_id fallback → @"com.<prefix>.clickety.unlock" (my prefix), so a missing argument still hits the right product. GDScript ALWAYS passes AppInfo.IAP_PRODUCT_ID to initialize() and purchase() anyway.
+   - g_product_id fallback → @"com.<prefix>.rowcounter.unlock" (my prefix), so a missing argument still hits the right product. GDScript ALWAYS passes AppInfo.IAP_PRODUCT_ID to initialize() and purchase() anyway.
    - Log prefix "[OilDue StoreKit]" → "[Clickety StoreKit]"; rename oil_due_sk_log → clickety_sk_log; "Couldn't load Unlock Oil Due from the App Store." → "Couldn't load Unlock Clickety from the App Store." No other logic changes. Show me the diff.
 2. ios/plugins/storekit/StoreKit.gdip exactly as Appendix H (';' comments only). export_presets.cfg: plugins/StoreKit=true. native/build_plugins.sh builds StoreKit when that line is true (the Appendix H flow; nm check for storekit_init). Preflight's plugin consistency check passes.
 3. scripts/autoload/purchase.gd — full version modeled on Oil Due's purchase.gd:
@@ -966,7 +966,7 @@ When done: PLAN.md step log line + my test list.
 - **KILL** if the app is still **not top 10 for `knitting counter` or `crochet counter`** after the one revision.
 
 ### Day 30 — unlock count (kill test #2)
-- ASC → Sales and Trends (or App Analytics) → In-App Purchases → units for `com.<prefix>.clickety.unlock` since launch.
+- ASC → Sales and Trends (or App Analytics) → In-App Purchases → units for `com.<prefix>.rowcounter.unlock` since launch.
 
 ### KILL LINE (fixed in advance, don't renegotiate)
 - **Kill at day 30 if fewer than 10 unlocks**, whatever the ratings.
@@ -1662,7 +1662,7 @@ Commit everything with message "Step N: <title>" and push to origin main. Don't 
   - The ObjC class is (still) named `TapticoStoreKit`. Leave the name alone; it's internal.
 - `native/godot-storekit/src/GodotPluginEntry.cpp`: `StoreKitBridge : Object`, registered as the Engine singleton **"StoreKit"** from `storekit_init()` (C++ linkage, no `extern "C"`, which is what Godot 4.6's generated `dummy.cpp` expects).
 - **Step 6 edits, and only these:**
-  - `g_product_id` fallback → `@"com.<prefix>.clickety.unlock"`
+  - `g_product_id` fallback → `@"com.<prefix>.rowcounter.unlock"`
   - log prefix `[OilDue StoreKit]` → `[Clickety StoreKit]` (plus the `oil_due_sk_log` rename)
   - the "Couldn't load Unlock Oil Due…" message → "Unlock Clickety"
   - GDScript always passes `AppInfo.IAP_PRODUCT_ID` to `initialize()` and `purchase()`.
@@ -2527,7 +2527,7 @@ Demo data for `screenshot_mode`:
 - **With the R-D or R-T revision:** add nothing about the listing. What's New describes app changes only.
 
 ### J6. In-app purchase metadata
-- Reference name `Clickety Unlock`. Product ID `com.<prefix>.clickety.unlock`. Non-consumable. Price tier $3.99 (set in ASC; it never appears in metadata or screenshots).
+- Reference name `Clickety Unlock`. Product ID `com.<prefix>.rowcounter.unlock`. Non-consumable. Price tier $3.99 (set in ASC; it never appears in metadata or screenshots).
 - Display name (≤ 30): `Unlock Clickety`.
 - Description (≤ 55, **verify** the limit): `Unlimited projects, repeat counters and more.` (44)
 - Review screenshot: `screenshots/iap-review.png` (the Unlock screen; a visible price is fine here).
@@ -2538,7 +2538,7 @@ Clickety is a row counter for knitting and crochet. No account or login. The app
 
 Included without purchase: one project with full counting, −1/Undo, notes, history, keep-screen-awake, and backup/restore through the Files app.
 
-The non-consumable in-app purchase (com.<prefix>.clickety.unlock) unlocks unlimited projects, linked/repeat counters[, the Home/Lock Screen widget][ and row alerts/reminders]. To reach it: tap the project name at the top → "+ New project", or ⋯ → Project details → Counters → "+ Add counter". Restore purchases is on the Unlock screen and in ⋯ → Settings → Purchase.
+The non-consumable in-app purchase (com.<prefix>.rowcounter.unlock) unlocks unlimited projects, linked/repeat counters[, the Home/Lock Screen widget][ and row alerts/reminders]. To reach it: tap the project name at the top → "+ New project", or ⋯ → Project details → Counters → "+ Add counter". Restore purchases is on the Unlock screen and in ⋯ → Settings → Purchase.
 
 To test linked counters after unlocking: ⋯ → Project details → Counters → + Add counter → "Repeat every N rows" → 8. Back on the counter, tap 16 times: Row 16, Pattern row 1/8, Repeats 2.
 [Widget: long-press the Home Screen → + → Clickety.]

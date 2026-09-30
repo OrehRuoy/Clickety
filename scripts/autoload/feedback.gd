@@ -1,7 +1,14 @@
 extends Node
 
-var haptics_enabled := true
-var sound_enabled := false
+var _player: AudioStreamPlayer
+
+
+func _ready() -> void:
+	_player = AudioStreamPlayer.new()
+	add_child(_player)
+	var click := load("res://assets/sfx/click.wav")
+	if click is AudioStream:
+		_player.stream = click
 
 
 func tick() -> void:
@@ -19,15 +26,19 @@ func wrap() -> void:
 
 
 func play_tick_sound() -> void:
-	pass
+	if not AppSettings.flag("sound"):
+		return
+	if _player == null or _player.stream == null:
+		return
+	_player.play()
 
 
 func play_wrap_sound() -> void:
-	pass
+	play_tick_sound()
 
 
 func _can_vibrate() -> bool:
-	if not haptics_enabled:
+	if not AppSettings.flag("haptics"):
 		return false
 	var os_name := OS.get_name()
 	return os_name == "Android" or os_name == "iOS"

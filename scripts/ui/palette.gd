@@ -38,6 +38,10 @@ const CHIPS: Array = [
 ]
 
 
+static func current() -> Dictionary:
+	return colors(AppSettings.resolved_theme())
+
+
 static func colors(theme_name: String = "warm") -> Dictionary:
 	var key := theme_name if THEMES.has(theme_name) else "warm"
 	var raw: Dictionary = THEMES[key]
@@ -47,6 +51,36 @@ static func colors(theme_name: String = "warm") -> Dictionary:
 	return out
 
 
+static func paint_action(button: Button, filled: bool) -> void:
+	var palette := current()
+	var box := StyleBoxFlat.new()
+	box.set_corner_radius_all(16)
+	var has_lock := button.get_node_or_null("LockMark") != null
+	box.content_margin_left = 46 if has_lock else 16
+	box.content_margin_right = 16
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT if has_lock else HORIZONTAL_ALIGNMENT_CENTER
+	var ink: Color = palette["accent_ink"] if filled else palette["ink"]
+	box.bg_color = palette["accent"] if filled else palette["surface"]
+	for state in ["normal", "hover", "pressed", "focus"]:
+		button.add_theme_stylebox_override(state, box)
+	button.add_theme_color_override("font_color", ink)
+	button.add_theme_color_override("font_hover_color", ink)
+	button.add_theme_color_override("font_pressed_color", ink)
+
+
+static func paint_progress(bar: ProgressBar, palette: Dictionary) -> void:
+	var track := StyleBoxFlat.new()
+	var track_color: Color = palette["muted"]
+	track_color.a = 0.28
+	track.bg_color = track_color
+	track.set_corner_radius_all(6)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = palette["accent"]
+	fill.set_corner_radius_all(6)
+	bar.add_theme_stylebox_override("background", track)
+	bar.add_theme_stylebox_override("fill", fill)
+
+
 static func chip(index: int) -> Dictionary:
 	var item: Dictionary = CHIPS[posmod(index, CHIPS.size())]
 	return {
@@ -54,3 +88,28 @@ static func chip(index: int) -> Dictionary:
 		"letter": str(item["letter"]),
 		"shape": str(item["shape"]),
 	}
+
+
+static func chip_ink(index: int) -> Color:
+	var bg: Color = chip(index)["color"]
+	var black := Color(0, 0, 0, 1)
+	var white := Color(1, 1, 1, 1)
+	if ratio(black, bg) >= ratio(white, bg):
+		return black
+	return white
+
+
+static func ratio(a: Color, b: Color) -> float:
+	var lighter := maxf(_luminance(a), _luminance(b))
+	var darker := minf(_luminance(a), _luminance(b))
+	return (lighter + 0.05) / (darker + 0.05)
+
+
+static func _luminance(color: Color) -> float:
+	return 0.2126 * _channel(color.r) + 0.7152 * _channel(color.g) + 0.0722 * _channel(color.b)
+
+
+static func _channel(value: float) -> float:
+	if value <= 0.04045:
+		return value / 12.92
+	return pow((value + 0.055) / 1.055, 2.4)

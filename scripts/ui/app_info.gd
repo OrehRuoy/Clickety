@@ -10,3 +10,5 @@ const IAP_PRODUCT_ID := "com.yourprefix.rowcounter.unlock"
 const PRIVACY_URL := "https://orehruoy.github.io/Clickety/privacy.html"
 const SUPPORT_URL := "https://orehruoy.github.io/Clickety/"
 const SUPPORT_EMAIL := "hallanhype@gmail.com"
+const WIDGET_SHIPPED := false
+static var SCREENSHOT_MODE := false

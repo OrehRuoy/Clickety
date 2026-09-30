@@ -49,6 +49,37 @@ enum SharedStore {
         return try? JSONDecoder().decode(Snapshot.self, from: data)
     }
 
+    /// Re-reads snapshot and pending immediately before writing. Appends one +1 and keeps the last 500.
+    static func bump() {
+        guard let d = defaults else { return }
+        guard let raw = d.string(forKey: "snapshot"),
+              let data = raw.data(using: .utf8),
+              var snap = try? JSONDecoder().decode(Snapshot.self, from: data),
+              snap.unlocked else { return }
+        var list: [[String: Any]] = []
+        if let pending = d.string(forKey: "pending"),
+           let pdata = pending.data(using: .utf8),
+           let arr = try? JSONSerialization.jsonObject(with: pdata) as? [[String: Any]] {
+            list = arr
+        }
+        snap.value += 1
+        snap.updated = Date().timeIntervalSince1970
+        list.append([
+            "project_id": snap.project_id,
+            "counter_id": snap.counter_id,
+            "d": 1,
+            "t": snap.updated
+        ])
+        if list.count > 500 {
+            list.removeFirst(list.count - 500)
+        }
+        save(snap)
+        if let out = try? JSONSerialization.data(withJSONObject: list),
+           let text = String(data: out, encoding: .utf8) {
+            d.set(text, forKey: "pending")
+        }
+    }
+
     static func save(_ snap: Snapshot) {
         guard let data = try? JSONEncoder().encode(snap), let s = String(data: data, encoding: .utf8) else { return }
         defaults?.set(s, forKey: "snapshot")

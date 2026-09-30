@@ -28,10 +28,21 @@ private let terracotta = Color(red: 0.706, green: 0.286, blue: 0.180)
 
 struct CountView: View {
     @Environment(\.widgetFamily) var family
+    @Environment(\.colorScheme) private var scheme
     let entry: CountEntry
 
+    private var paper: Color {
+        scheme == .dark ? Color(red: 0.086, green: 0.078, blue: 0.071) : cream
+    }
+
+    private var label: Color {
+        scheme == .dark ? Color(red: 0.953, green: 0.925, blue: 0.886) : ink
+    }
+
     var body: some View {
-        content.widgetBackground(isAccessory: isAccessory)
+        content
+            .widgetBackground(isAccessory: isAccessory, paper: paper)
+            .widgetURL(URL(string: "clickety://open"))
     }
 
     private var isAccessory: Bool {
@@ -84,11 +95,11 @@ struct CountView: View {
         default:
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(s.project).font(.caption).foregroundColor(ink.opacity(0.7)).lineLimit(1)
+                    Text(s.project).font(.caption).foregroundColor(label.opacity(0.7)).lineLimit(1)
                     Text("\(s.value)").font(.system(size: 56, weight: .bold, design: .rounded))
-                        .foregroundColor(ink).minimumScaleFactor(0.4).lineLimit(1)
-                    Text(s.target > 0 ? "\(s.counter) of \(s.target)" : s.counter).font(.caption).foregroundColor(ink)
-                    if let r = repeatText(s) { Text(r).font(.caption2).foregroundColor(ink.opacity(0.8)) }
+                        .foregroundColor(label).minimumScaleFactor(0.4).lineLimit(1)
+                    Text(s.target > 0 ? "\(s.counter) of \(s.target)" : s.counter).font(.caption).foregroundColor(label)
+                    if let r = repeatText(s) { Text(r).font(.caption2).foregroundColor(label.opacity(0.8)) }
                 }
                 if family == .systemMedium {
                     Spacer()
@@ -111,12 +122,12 @@ struct CountView: View {
 }
 
 extension View {
-    @ViewBuilder func widgetBackground(isAccessory: Bool) -> some View {
+    @ViewBuilder func widgetBackground(isAccessory: Bool, paper: Color) -> some View {
         if #available(iOS 17.0, *) {
             if isAccessory { self.containerBackground(for: .widget) { Color.clear } }
-            else { self.containerBackground(for: .widget) { cream } }
+            else { self.containerBackground(for: .widget) { paper } }
         } else {
-            if isAccessory { self } else { self.padding().background(cream) }
+            if isAccessory { self } else { self.padding().background(paper) }
         }
     }
 }

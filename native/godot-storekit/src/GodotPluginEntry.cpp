@@ -16,6 +16,7 @@ void storekit_purchase(const char *product_id);
 void storekit_restore(void);
 void storekit_request_review(void);
 const char *storekit_get_price(void);
+const char *storekit_get_title(void);
 bool storekit_is_price_ready(void);
 bool storekit_has_lifetime(void);
 }
@@ -30,6 +31,7 @@ protected:
 		ClassDB::bind_method(D_METHOD("restore"), &StoreKitBridge::restore);
 		ClassDB::bind_method(D_METHOD("request_review"), &StoreKitBridge::request_review);
 		ClassDB::bind_method(D_METHOD("get_price"), &StoreKitBridge::get_price);
+		ClassDB::bind_method(D_METHOD("get_title"), &StoreKitBridge::get_title);
 		ClassDB::bind_method(D_METHOD("is_price_ready"), &StoreKitBridge::is_price_ready);
 		ClassDB::bind_method(D_METHOD("has_lifetime"), &StoreKitBridge::has_lifetime);
 		ADD_SIGNAL(MethodInfo("purchase_updated", PropertyInfo(Variant::STRING, "product_id")));
@@ -45,6 +47,7 @@ public:
 	void restore() { storekit_restore(); }
 	void request_review() { storekit_request_review(); }
 	String get_price() { return String::utf8(storekit_get_price()); }
+	String get_title() { return String::utf8(storekit_get_title()); }
 	bool is_price_ready() { return storekit_is_price_ready(); }
 	bool has_lifetime() { return storekit_has_lifetime(); }
 };

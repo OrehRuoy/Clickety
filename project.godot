@@ -14,18 +14,25 @@ config/name="Clickety"
 config/version="1.0.0"
 run/main_scene="res://scenes/counter.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
-config/icon="res://assets/icon/icon_1024.png"
 boot_splash/bg_color=Color(0.984, 0.965, 0.933, 1)
+boot_splash/show_image=true
+boot_splash/image="res://assets/splash/splash.png"
+boot_splash/fullsize=true
+boot_splash/use_filter=true
+config/icon="res://assets/icon/icon_1024.png"
+
+[audio]
+
+general/ios/mix_with_others=true
 
 [autoload]
 
+AppSettings="*res://scripts/autoload/app_settings.gd"
+Purchase="*res://scripts/autoload/purchase.gd"
 WidgetSync="*res://scripts/autoload/widget_sync.gd"
 Feedback="*res://scripts/autoload/feedback.gd"
 Store="*res://scripts/autoload/store.gd"
-
-[gui]
-
-theme/custom="res://assets/theme.tres"
+NotifyService="*res://scripts/autoload/notify_service.gd"
 
 [display]
 
@@ -34,6 +41,10 @@ window/size/viewport_height=926
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
+
+[gui]
+
+theme/custom="res://assets/theme.tres"
 
 [rendering]
 

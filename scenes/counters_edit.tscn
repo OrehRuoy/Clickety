@@ -1,0 +1,226 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/counters_edit.gd" id="1_counters"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area.gd" id="2_safe"]
+[ext_resource type="PackedScene" path="res://scenes/components/sheet.tscn" id="3_sheet"]
+
+[node name="CountersEdit" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_counters")
+
+[node name="Background" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.984314, 0.964706, 0.933333, 1)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+script = ExtResource("2_safe")
+
+[node name="Scroll" type="ScrollContainer" parent="SafeArea"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Column" type="VBoxContainer" parent="SafeArea/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Back" type="Button" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+flat = true
+action_mode = 0
+alignment = 0
+text = "Back"
+
+[node name="Title" type="Label" parent="SafeArea/Scroll/Column"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Counters"
+
+[node name="List" type="VBoxContainer" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Add" type="Button" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+text = "+ Add counter"
+
+[node name="Presets" type="VBoxContainer" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RepeatPreset" type="Button" parent="SafeArea/Scroll/Column/Presets"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+alignment = 0
+text = "Repeat every N rows"
+
+[node name="IndependentPreset" type="Button" parent="SafeArea/Scroll/Column/Presets"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+alignment = 0
+text = "Independent counter"
+
+[node name="CustomPreset" type="Button" parent="SafeArea/Scroll/Column/Presets"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+alignment = 0
+text = "Custom"
+
+[node name="PresetCancel" type="Button" parent="SafeArea/Scroll/Column/Presets"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+flat = true
+action_mode = 0
+alignment = 0
+text = "Cancel"
+
+[node name="Form" type="VBoxContainer" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FormTitle" type="Label" parent="SafeArea/Scroll/Column/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Custom"
+
+[node name="Name" type="LineEdit" parent="SafeArea/Scroll/Column/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+max_length = 40
+placeholder_text = "Stitches"
+
+[node name="N" type="LineEdit" parent="SafeArea/Scroll/Column/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+placeholder_text = "Every N rows (2–200)"
+alignment = 1
+
+[node name="Start" type="LineEdit" parent="SafeArea/Scroll/Column/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+placeholder_text = "Start"
+alignment = 1
+
+[node name="Step" type="LineEdit" parent="SafeArea/Scroll/Column/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+placeholder_text = "Step"
+alignment = 1
+
+[node name="Wraps" type="LineEdit" parent="SafeArea/Scroll/Column/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+placeholder_text = "Wraps at (0 = never)"
+alignment = 1
+
+[node name="Follows" type="OptionButton" parent="SafeArea/Scroll/Column/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+
+[node name="On" type="OptionButton" parent="SafeArea/Scroll/Column/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+
+[node name="Error" type="Label" parent="SafeArea/Scroll/Column/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="Save" type="Button" parent="SafeArea/Scroll/Column/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+text = "Save"
+
+[node name="FormCancel" type="Button" parent="SafeArea/Scroll/Column/Form"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+flat = true
+action_mode = 0
+text = "Cancel"
+
+[node name="Sheet" parent="." instance=ExtResource("3_sheet")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

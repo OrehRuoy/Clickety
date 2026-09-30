@@ -103,6 +103,7 @@ static func _validate_project(project: Dictionary) -> Dictionary:
 		if out.has("archived"):
 			_stash(out, "archived", out["archived"])
 		out["archived"] = false
+	_coerce_string(out, "focus_id", "")
 	out["timer"] = _validate_timer(out)
 	out["counters"] = _validate_counters(out)
 	if not out.has("alerts") or typeof(out["alerts"]) != TYPE_ARRAY:

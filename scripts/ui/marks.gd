@@ -9,70 +9,85 @@ func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_IGNORE
 
 
+static func icon(kind: String, tint: Color, side: float) -> Control:
+	var texture: Texture2D = load("res://assets/marks/%s.png" % kind) as Texture2D
+	if texture == null:
+		var drawn := Mark.new()
+		drawn.kind = "hook" if kind == "hook" else "needles"
+		drawn.custom_minimum_size = Vector2(side, side)
+		drawn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		return drawn
+	var rect := TextureRect.new()
+	rect.texture = texture
+	rect.modulate = tint
+	rect.custom_minimum_size = Vector2(side, side)
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return rect
+
+
+static func wordmark(width: float, height: float) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.texture = load("res://assets/marks/wordmark.png") as Texture2D
+	rect.modulate = Palette.current()["ink"]
+	rect.custom_minimum_size = Vector2(width, height)
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	rect.accessibility_name = AppInfo.DISPLAY_NAME
+	return rect
+
+
+static func show_lock(button: Button, show: bool, is_locked: bool = true) -> void:
+	var existing := button.get_node_or_null("LockMark") as Mark
+	if not show:
+		if existing != null:
+			existing.queue_free()
+		return
+	var mark := existing
+	if mark == null:
+		mark = Mark.new()
+		mark.name = "LockMark"
+		mark.kind = "lock"
+		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		mark.custom_minimum_size = Vector2(22, 22)
+		mark.size = Vector2(22, 22)
+		button.add_child(mark)
+	mark.locked = is_locked
+	mark.position = Vector2(16, 17)
+	mark.queue_redraw()
+
+
 func _draw() -> void:
-	var palette := Palette.colors("warm")
-	var ink: Color = palette["ink"]
-	var accent: Color = palette["accent"]
+	var palette := Palette.current()
+	var file := kind
+	var tint: Color = palette["ink"]
 	match kind:
 		"sun":
-			_sun(accent)
+			tint = palette["accent"]
 		"lock":
-			_lock(accent if locked else ink)
-		"menu":
-			_menu(ink)
-		"minus":
-			_minus(ink)
-		"undo":
-			_undo(ink)
+			file = "lock" if locked else "unlock"
+			tint = palette["accent"] if locked else palette["ink"]
+		"menu", "minus", "undo", "needles", "hook":
+			pass
+		_:
+			return
+	var texture := _mark_texture(file)
+	if texture == null:
+		return
+	draw_texture_rect(texture, Rect2(Vector2.ZERO, size), false, tint)
 
 
-func _sun(color: Color) -> void:
-	var center := size * 0.5
-	var radius := minf(size.x, size.y) * 0.22
-	draw_circle(center, radius, color)
-	var inner := radius + 2.0
-	var outer := minf(size.x, size.y) * 0.46
-	for i in 8:
-		var dir := Vector2.from_angle(float(i) * TAU / 8.0)
-		draw_line(center + dir * inner, center + dir * outer, color, 2.0, true)
+static var _cache := {}
 
 
-func _lock(color: Color) -> void:
-	var body := Rect2(size.x * 0.22, size.y * 0.48, size.x * 0.56, size.y * 0.36)
-	draw_rect(body, color, true)
-	var center := Vector2(size.x * 0.5, size.y * 0.48)
-	var radius := size.x * 0.2
-	if locked:
-		draw_arc(center, radius, PI, TAU, 16, color, 2.4, true)
-	else:
-		draw_arc(center + Vector2(size.x * 0.1, -size.y * 0.06), radius, PI * 1.15, TAU, 14, color, 2.4, true)
-
-
-func _menu(color: Color) -> void:
-	var y := size.y * 0.5
-	var mid := size.x * 0.5
-	var gap := size.x * 0.22
-	var radius := minf(size.x, size.y) * 0.08
-	draw_circle(Vector2(mid - gap, y), radius, color)
-	draw_circle(Vector2(mid, y), radius, color)
-	draw_circle(Vector2(mid + gap, y), radius, color)
-
-
-func _minus(color: Color) -> void:
-	var y := size.y * 0.5
-	draw_line(Vector2(size.x * 0.15, y), Vector2(size.x * 0.85, y), color, 2.6, true)
-
-
-func _undo(color: Color) -> void:
-	var center := Vector2(size.x * 0.56, size.y * 0.52)
-	var radius := minf(size.x, size.y) * 0.32
-	var end := PI * 1.45
-	draw_arc(center, radius, 0.5, end, 18, color, 2.2, true)
-	var tip := center + Vector2.from_angle(end) * radius
-	var forward := Vector2.from_angle(end + PI * 0.5).normalized()
-	var side := forward.orthogonal().normalized()
-	draw_colored_polygon(PackedVector2Array([
-		tip + forward * 6.0,
-		tip - side * 4.0,
-		tip + side * 4.0,
-	]), color)
+static func _mark_texture(file: String) -> Texture2D:
+	if _cache.has(file):
+		return _cache[file]
+	var texture: Texture2D = load("res://assets/marks/%s.png" % file)
+	_cache[file] = texture
+	return texture

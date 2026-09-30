@@ -1,0 +1,229 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/project_edit.gd" id="1_edit"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area.gd" id="2_safe"]
+[ext_resource type="PackedScene" path="res://scenes/components/sheet.tscn" id="3_sheet"]
+
+[node name="ProjectEdit" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_edit")
+
+[node name="Background" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.984314, 0.964706, 0.933333, 1)
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+script = ExtResource("2_safe")
+
+[node name="Scroll" type="ScrollContainer" parent="SafeArea"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Column" type="VBoxContainer" parent="SafeArea/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Back" type="Button" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+flat = true
+action_mode = 0
+alignment = 0
+text = "Back"
+
+[node name="NameLabel" type="Label" parent="SafeArea/Scroll/Column"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Name"
+
+[node name="Name" type="LineEdit" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+max_length = 40
+placeholder_text = "Project name"
+
+[node name="Craft" type="HBoxContainer" parent="SafeArea/Scroll/Column"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Knit" type="Button" parent="SafeArea/Scroll/Column/Craft"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+text = "Knit"
+
+[node name="Crochet" type="Button" parent="SafeArea/Scroll/Column/Craft"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+text = "Crochet"
+
+[node name="TargetLabel" type="Label" parent="SafeArea/Scroll/Column"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Target rows"
+
+[node name="TargetRow" type="HBoxContainer" parent="SafeArea/Scroll/Column"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TargetDown" type="Button" parent="SafeArea/Scroll/Column/TargetRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+focus_mode = 0
+action_mode = 0
+text = "−"
+
+[node name="Target" type="LineEdit" parent="SafeArea/Scroll/Column/TargetRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+alignment = 1
+text = "0"
+
+[node name="TargetUp" type="Button" parent="SafeArea/Scroll/Column/TargetRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+focus_mode = 0
+action_mode = 0
+text = "+"
+
+[node name="NotesLabel" type="Label" parent="SafeArea/Scroll/Column"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Notes"
+
+[node name="Notes" type="TextEdit" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 140)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+placeholder_text = "No notes yet"
+wrap_mode = 1
+
+[node name="ShowTimer" type="CheckButton" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+text = "Show timer"
+
+[node name="TimerRun" type="Button" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+text = "Start"
+
+[node name="Counters" type="Button" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+text = "Counters"
+
+[node name="RowAlerts" type="Button" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+text = "Row alerts"
+
+[node name="HistoryLabel" type="Label" parent="SafeArea/Scroll/Column"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "History"
+
+[node name="History" type="VBoxContainer" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Reset" type="Button" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+text = "Reset main counter…"
+
+[node name="Delete" type="Button" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+text = "Delete project…"
+
+[node name="Archive" type="Button" parent="SafeArea/Scroll/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+focus_mode = 0
+action_mode = 0
+text = "Archive"
+
+[node name="Sheet" parent="." instance=ExtResource("3_sheet")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

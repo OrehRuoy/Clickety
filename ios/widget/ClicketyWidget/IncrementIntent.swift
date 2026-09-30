@@ -9,12 +9,9 @@ struct IncrementIntent: AppIntent {
     static var description = IntentDescription("Adds one to the current Clickety counter.")
 
     func perform() async throws -> some IntentResult {
-        if var s = SharedStore.load(), s.unlocked {
-            s.value += 1
-            s.updated = Date().timeIntervalSince1970
-            SharedStore.save(s)
-            SharedStore.appendPending(projectId: s.project_id, counterId: s.counter_id)
-        }
-        return .result()  // WidgetKit reloads the widget after an intent runs
+        // Re-read snapshot and pending, then write both. Shows main value + 1 only.
+        // Linked counters and wraps are applied by the app when it merges pending.
+        SharedStore.bump()
+        return .result()
     }
 }
