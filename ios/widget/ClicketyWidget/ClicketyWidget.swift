@@ -25,6 +25,7 @@ struct Provider: TimelineProvider {
 private let cream = Color(red: 0.984, green: 0.965, blue: 0.933)
 private let ink = Color(red: 0.118, green: 0.106, blue: 0.094)
 private let terracotta = Color(red: 0.706, green: 0.286, blue: 0.180)
+private let nightAccent = Color(red: 0.898, green: 0.541, blue: 0.420)
 
 struct CountView: View {
     @Environment(\.widgetFamily) var family
@@ -37,6 +38,25 @@ struct CountView: View {
 
     private var label: Color {
         scheme == .dark ? Color(red: 0.953, green: 0.925, blue: 0.886) : ink
+    }
+
+    private var accent: Color {
+        scheme == .dark ? nightAccent : terracotta
+    }
+
+    private var onAccent: Color {
+        scheme == .dark ? Color(red: 0.086, green: 0.078, blue: 0.071) : Color.white
+    }
+
+    private func progressBar(_ s: Snapshot) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(label.opacity(0.14))
+                Capsule().fill(accent)
+                    .frame(width: max(6, geo.size.width * CGFloat(min(s.value, s.target)) / CGFloat(max(1, s.target))))
+            }
+        }
+        .frame(height: 6)
     }
 
     var body: some View {
@@ -57,7 +77,18 @@ struct CountView: View {
             switch family {
             case .accessoryInline: Text(msg)
             case .accessoryCircular: Image(systemName: "lock.fill")
-            default: Text(msg).font(.headline).multilineTextAlignment(.center)
+            default:
+                VStack(spacing: 8) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .frame(width: 48, height: 48)
+                        .background(Circle().fill(accent.opacity(0.16)))
+                        .foregroundColor(accent)
+                    Text(msg)
+                        .font(.system(.headline, design: .rounded))
+                        .foregroundColor(label)
+                        .multilineTextAlignment(.center)
+                }
             }
         }
     }
@@ -93,13 +124,20 @@ struct CountView: View {
                 if let r = repeatText(s) { Text(r).font(.caption).lineLimit(1) }
             }
         default:
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(s.project).font(.caption).foregroundColor(label.opacity(0.7)).lineLimit(1)
-                    Text("\(s.value)").font(.system(size: 56, weight: .bold, design: .rounded))
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(s.project)
+                        .font(.system(.caption, design: .rounded).weight(.semibold))
+                        .foregroundColor(accent).lineLimit(1)
+                    Text("\(s.value)").font(.system(size: 54, weight: .bold, design: .rounded))
                         .foregroundColor(label).minimumScaleFactor(0.4).lineLimit(1)
-                    Text(s.target > 0 ? "\(s.counter) of \(s.target)" : s.counter).font(.caption).foregroundColor(label)
-                    if let r = repeatText(s) { Text(r).font(.caption2).foregroundColor(label.opacity(0.8)) }
+                    if s.target > 0 { progressBar(s) }
+                    Text(s.target > 0 ? "\(s.counter) of \(s.target)" : s.counter)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundColor(label.opacity(0.75)).lineLimit(1)
+                    if let r = repeatText(s) {
+                        Text(r).font(.system(.caption2, design: .rounded)).foregroundColor(label.opacity(0.65)).lineLimit(1)
+                    }
                 }
                 if family == .systemMedium {
                     Spacer()
@@ -112,9 +150,9 @@ struct CountView: View {
     @ViewBuilder private var plusButton: some View {
         if #available(iOS 17.0, *) {
             Button(intent: IncrementIntent()) {
-                Image(systemName: "plus").font(.system(size: 34, weight: .bold))
-                    .frame(width: 72, height: 72)
-                    .background(Circle().fill(terracotta)).foregroundColor(.white)
+                Image(systemName: "plus").font(.system(size: 30, weight: .bold))
+                    .frame(width: 68, height: 68)
+                    .background(Circle().fill(accent)).foregroundColor(onAccent)
             }
             .buttonStyle(.plain)
         }
@@ -139,7 +177,7 @@ struct ClicketyCountWidget: Widget {
             CountView(entry: entry)
         }
         .configurationDisplayName("Clickety")
-        .description("Your current row count.")
+        .description("Keep your row count on the Home Screen or Lock Screen.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryInline, .accessoryCircular, .accessoryRectangular])
     }
 }

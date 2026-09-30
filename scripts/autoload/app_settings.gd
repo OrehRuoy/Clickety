@@ -23,6 +23,7 @@ func _ready() -> void:
 		_data["installed_at"] = int(Time.get_unix_time_from_system())
 		save_to_dir(DATA_DIR, _data)
 	_apply_theme()
+	get_tree().node_added.connect(AppTheme.on_node_added)
 
 
 func flag(key: String) -> bool:
@@ -250,3 +251,4 @@ func _apply_theme() -> void:
 	theme.set_color("font_pressed_color", "Button", palette["ink"])
 	theme.set_color("font_focus_color", "Button", palette["ink"])
 	theme.set_color("font_disabled_color", "Button", palette["muted"])
+	AppTheme.apply(theme, palette)

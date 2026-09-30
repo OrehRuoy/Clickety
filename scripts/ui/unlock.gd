@@ -87,6 +87,7 @@ func _paint_theme() -> void:
 	%Unlock.add_theme_color_override("font_hover_color", palette["accent_ink"])
 	%Unlock.add_theme_color_override("font_pressed_color", palette["accent_ink"])
 	%Restore.add_theme_color_override("font_color", palette["muted"])
+	Palette.paint_back(%Back)
 
 
 func _on_appearance(key: String) -> void:

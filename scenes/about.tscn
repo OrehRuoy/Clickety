@@ -87,17 +87,15 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 focus_mode = 0
-flat = true
 action_mode = 0
 alignment = 0
-text = "Privacy"
+text = "Privacy policy"
 
 [node name="Email" type="Button" parent="SafeArea/Column"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 focus_mode = 0
-flat = true
 action_mode = 0
 alignment = 0
 text = "hallanhype@gmail.com"

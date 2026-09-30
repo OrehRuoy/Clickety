@@ -25,15 +25,37 @@ func present(title: String, rows: Array) -> void:
 	for row in rows:
 		var button := Button.new()
 		button.text = str(row.get("text", ""))
-		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.custom_minimum_size = Vector2(0, 56)
+		button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.flat = true
+		button.custom_minimum_size = Vector2(0, 52)
 		button.focus_mode = Control.FOCUS_NONE
 		button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-		button.add_theme_font_size_override("font_size", 18)
+		button.add_theme_font_size_override("font_size", 20)
 		var action := str(row.get("id", ""))
+		var ink: Color = Palette.current()["muted"] if action == "cancel" else Palette.current()["ink"]
+		button.add_theme_color_override("font_color", ink)
+		button.add_theme_color_override("font_hover_color", ink)
+		button.add_theme_color_override("font_pressed_color", ink)
 		button.pressed.connect(_pick.bind(action))
 		_rows.add_child(button)
 	visible = true
+	call_deferred("_fit_panel")
+
+
+func _fit_panel() -> void:
+	var height: float = %Panel.get_combined_minimum_size().y + _home_inset()
+	%Panel.offset_top = -height
+
+
+func _home_inset() -> float:
+	if OS.get_name() != "iOS":
+		return 8.0
+	var win := Vector2(DisplayServer.window_get_size())
+	if win.y <= 0.0:
+		return 8.0
+	var safe := DisplayServer.get_display_safe_area()
+	var visible := get_viewport().get_visible_rect().size
+	return maxf(8.0, (win.y - safe.end.y) * visible.y / win.y)
 
 
 func _pick(action: String) -> void:

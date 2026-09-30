@@ -84,3 +84,4 @@ RESULT: PASS
 2026-09-30 — Step 11: accessibility, iPad layout, polish, and the review prompt. Headless tests PASS. VoiceOver names are set on the big tap, −1, and Undo. VoiceOver is not confirmed on a device, so the app does not claim support.
 2026-09-30 — Step 12: App Store assets, screenshots, and the listing pack. aso_check RESULT: PASS. The keyword field is 97/100 bytes and still uses repeat.
 2026-09-30 — Step 13: 1.0.0 release candidate. release_report.sh RESULT: PASS. The widget spike panel is removed. TestFlight upload waits.
+2026-09-30 - UI sweep: shared app theme (cards, switches, scrollbars, menus), scroll-safe taps on every scrolling screen, Back buttons, widget redesign (not compiled locally). release_report.sh RESULT: PASS.

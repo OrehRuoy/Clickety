@@ -38,6 +38,7 @@ theme_override_constants/margin_bottom = 16
 script = ExtResource("2_safe")
 
 [node name="Scroll" type="ScrollContainer" parent="SafeArea"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -150,7 +151,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-placeholder_text = "Every N rows (2–200)"
+placeholder_text = "Every N rows (2â€“200)"
 alignment = 1
 
 [node name="Start" type="LineEdit" parent="SafeArea/Scroll/Column/Form"]

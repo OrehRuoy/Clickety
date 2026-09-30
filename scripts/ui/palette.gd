@@ -68,6 +68,54 @@ static func paint_action(button: Button, filled: bool) -> void:
 	button.add_theme_color_override("font_pressed_color", ink)
 
 
+static func paint_back(button: Button) -> void:
+	var palette := current()
+	var box := StyleBoxFlat.new()
+	box.bg_color = palette["surface"]
+	box.set_corner_radius_all(14)
+	box.content_margin_left = 16
+	box.content_margin_right = 16
+	box.border_color = palette["accent"]
+	box.set_border_width_all(2)
+	for state in ["normal", "hover", "pressed", "focus"]:
+		button.add_theme_stylebox_override(state, box)
+	var ink: Color = palette["ink"]
+	button.add_theme_color_override("font_color", ink)
+	button.add_theme_color_override("font_hover_color", ink)
+	button.add_theme_color_override("font_pressed_color", ink)
+	button.flat = false
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	if button.text == "Back":
+		button.text = "←  Back"
+
+
+static func danger() -> Color:
+	match AppSettings.resolved_theme():
+		"night":
+			return Color("#FF8F85")
+		"contrast":
+			return Color("#FFFFFF")
+	return Color("#B3261E")
+
+
+static func paint_scroll(scroll: ScrollContainer) -> void:
+	var palette := current()
+	var grab := StyleBoxFlat.new()
+	grab.bg_color = palette["accent"]
+	grab.set_corner_radius_all(6)
+	var track := StyleBoxFlat.new()
+	var track_color: Color = palette["muted"]
+	track_color.a = 0.28
+	track.bg_color = track_color
+	track.set_corner_radius_all(6)
+	var bar := scroll.get_v_scroll_bar()
+	bar.custom_minimum_size.x = 8
+	for style_name in ["grabber", "grabber_highlight", "grabber_pressed"]:
+		bar.add_theme_stylebox_override(style_name, grab)
+	for style_name in ["scroll", "scroll_focus"]:
+		bar.add_theme_stylebox_override(style_name, track)
+
+
 static func paint_progress(bar: ProgressBar, palette: Dictionary) -> void:
 	var track := StyleBoxFlat.new()
 	var track_color: Color = palette["muted"]

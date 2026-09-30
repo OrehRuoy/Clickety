@@ -38,6 +38,7 @@ theme_override_constants/margin_bottom = 16
 script = ExtResource("2_safe")
 
 [node name="Scroll" type="ScrollContainer" parent="SafeArea"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -112,7 +113,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 22
 focus_mode = 0
 action_mode = 0
-text = "−"
+text = "âˆ’"
 
 [node name="Target" type="LineEdit" parent="SafeArea/Scroll/Column/TargetRow"]
 unique_name_in_owner = true
@@ -199,7 +200,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 focus_mode = 0
 action_mode = 0
-text = "Reset main counter…"
+text = "Reset main counterâ€¦"
 
 [node name="Delete" type="Button" parent="SafeArea/Scroll/Column"]
 unique_name_in_owner = true
@@ -208,7 +209,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 focus_mode = 0
 action_mode = 0
-text = "Delete project…"
+text = "Delete projectâ€¦"
 
 [node name="Archive" type="Button" parent="SafeArea/Scroll/Column"]
 unique_name_in_owner = true

@@ -29,6 +29,7 @@ var _sections: Array[Label] = []
 var _rows: Array[Button] = []
 var _theme_buttons := {}
 var _size_buttons := {}
+var _checks: Array[CheckButton] = []
 
 
 func _ready() -> void:
@@ -39,6 +40,7 @@ func _ready() -> void:
 	Purchase.purchase_error.connect(_on_purchase_error)
 	NotifyService.reminder_message.connect(_on_reminder_message)
 	get_viewport().size_changed.connect(_fit_column)
+	TouchScroll.protect(%Scroll)
 	call_deferred("_fit_column")
 	_sync()
 	_paint()
@@ -117,10 +119,11 @@ func _check(parent: VBoxContainer, text: String, handler: Callable) -> CheckButt
 	button.text = text
 	button.custom_minimum_size = Vector2(0, 56)
 	button.focus_mode = Control.FOCUS_NONE
-	button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	button.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.pressed.connect(handler)
 	parent.add_child(button)
+	_checks.append(button)
 	return button
 
 
@@ -129,7 +132,7 @@ func _choice(parent: Container, text: String, handler: Callable) -> Button:
 	button.text = text
 	button.custom_minimum_size = Vector2(0, 56)
 	button.focus_mode = Control.FOCUS_NONE
-	button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	button.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.pressed.connect(handler)
 	parent.add_child(button)
@@ -147,7 +150,7 @@ func _sync() -> void:
 	if _daily != null:
 		_daily.set_pressed_no_signal(AppSettings.flag("daily"))
 		var reminder_locked := not Purchase.is_unlocked()
-		_daily.text = "Unlock" if reminder_locked else "Daily reminder"
+		_daily.text = "Daily reminder"
 		Mark.show_lock(_daily, reminder_locked)
 	_loading = false
 	var owned := Purchase.is_unlocked()
@@ -158,6 +161,8 @@ func _sync() -> void:
 func _paint() -> void:
 	var palette := Palette.current()
 	%Background.color = palette["bg"]
+	Palette.paint_back(%Back)
+	Palette.paint_scroll(%Scroll)
 	for label in _sections:
 		label.add_theme_color_override("font_color", palette["muted"])
 	if _status != null:
@@ -176,6 +181,8 @@ func _paint() -> void:
 		_mark(_theme_buttons[key], str(key) == AppSettings.choice("theme"), palette)
 	for key in _size_buttons:
 		_mark(_size_buttons[key], str(key) == AppSettings.choice("text_size"), palette)
+	for button in _checks:
+		_paint_check(button, palette)
 
 
 func _mark(button: Button, selected: bool, palette: Dictionary) -> void:
@@ -190,6 +197,24 @@ func _mark(button: Button, selected: bool, palette: Dictionary) -> void:
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		button.add_theme_stylebox_override(state, box)
 	button.add_theme_color_override("font_color", palette["ink"])
+	button.add_theme_color_override("font_disabled_color", palette["muted"])
+
+
+func _paint_check(button: CheckButton, palette: Dictionary) -> void:
+	var box := StyleBoxFlat.new()
+	box.bg_color = palette["surface"]
+	box.set_corner_radius_all(12)
+	var has_lock := button.get_node_or_null("LockMark") != null
+	box.content_margin_left = 46 if has_lock else 16
+	box.content_margin_right = 76
+	box.content_margin_top = 8
+	box.content_margin_bottom = 8
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		button.add_theme_stylebox_override(state, box)
+	var ink: Color = palette["ink"]
+	button.add_theme_color_override("font_color", ink)
+	button.add_theme_color_override("font_hover_color", ink)
+	button.add_theme_color_override("font_pressed_color", ink)
 	button.add_theme_color_override("font_disabled_color", palette["muted"])
 
 

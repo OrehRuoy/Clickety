@@ -72,7 +72,9 @@ func _draw() -> void:
 		"lock":
 			file = "lock" if locked else "unlock"
 			tint = palette["accent"] if locked else palette["ink"]
-		"menu", "minus", "undo", "needles", "hook":
+		"minus", "undo":
+			tint = Color.WHITE
+		"menu", "needles", "hook":
 			pass
 		_:
 			return

@@ -44,13 +44,10 @@ func _ready() -> void:
 	_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_wash.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_wash.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_wash.set_anchors_preset(Control.PRESET_CENTER)
-	_wash.offset_left = -190.0
-	_wash.offset_top = -70.0
-	_wash.offset_right = 190.0
-	_wash.offset_bottom = 310.0
+	_wash.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	add_child(_wash)
 	move_child(_wash, 1)
+	get_viewport().size_changed.connect(_place_wash)
 	_paint()
 	_apply_numeral_font()
 	for button in [_project_name, _lock_button, _menu, _big_tap, _minus, _undo]:
@@ -153,6 +150,53 @@ func _paint() -> void:
 	if _timer_read != null:
 		_timer_read.add_theme_color_override("font_color", palette["muted"])
 	Palette.paint_progress(_progress, palette)
+	_paint_bottom()
+	_place_wash()
+
+
+func _place_wash() -> void:
+	if _wash == null or not is_node_ready():
+		return
+	if _numeral.size.x < 1.0 or _numeral.size.y < 1.0:
+		return
+	var center := _numeral.get_global_rect().get_center() - global_position
+	var side := 320.0
+	_wash.offset_left = center.x - side * 0.5
+	_wash.offset_top = center.y - side * 0.5
+	_wash.offset_right = center.x + side * 0.5
+	_wash.offset_bottom = center.y + side * 0.5
+
+
+func _paint_bottom() -> void:
+	_style_corner(_minus, true)
+	_style_corner(_undo, not _undo.disabled)
+
+
+func _style_corner(button: Button, live: bool) -> void:
+	var palette := Palette.current()
+	var ink: Color = palette["accent"] if live else palette["muted"]
+	var box := StyleBoxFlat.new()
+	box.set_corner_radius_all(16)
+	box.bg_color = palette["surface"]
+	box.border_color = ink
+	box.set_border_width_all(2)
+	box.content_margin_left = 12
+	box.content_margin_right = 12
+	box.content_margin_top = 8
+	box.content_margin_bottom = 8
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		button.add_theme_stylebox_override(state, box)
+	if button.get_child_count() == 0:
+		return
+	var row := button.get_child(0)
+	row.modulate = Color.WHITE
+	for node in row.get_children():
+		if node is Mark:
+			node.modulate = ink
+			node.queue_redraw()
+		elif node is Label:
+			node.modulate = Color.WHITE
+			node.add_theme_color_override("font_color", ink)
 
 
 func _apply_numeral_font() -> void:
@@ -189,8 +233,8 @@ func _refresh() -> void:
 	_rebuild_chips(project, str(counter.get("id", "")))
 	var undo_list = project.get("undo", [])
 	_undo.disabled = typeof(undo_list) != TYPE_ARRAY or undo_list.is_empty()
-	if _undo.get_child_count() > 0:
-		_undo.get_child(0).modulate.a = 0.4 if _undo.disabled else 1.0
+	_paint_bottom()
+	_place_wash()
 	var hint_done := bool(Store.hints().get("tap", false))
 	_hint.visible = not _locked and not hint_done
 	if _hint.visible:
@@ -217,6 +261,7 @@ func _fit_layout() -> void:
 
 func _center_numeral() -> void:
 	_numeral.pivot_offset = _numeral.size * 0.5
+	_place_wash()
 
 
 func _on_store_changed(_project_id: String) -> void:

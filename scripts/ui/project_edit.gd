@@ -23,6 +23,8 @@ func _ready() -> void:
 	%Counters.pressed.connect(_on_counters)
 	%RowAlerts.pressed.connect(_on_alerts)
 	%Sheet.picked.connect(_on_sheet)
+	_paint_static()
+	TouchScroll.protect(%Scroll)
 	get_viewport().size_changed.connect(_fit_column)
 	call_deferred("_fit_column")
 	_project = Store.project_by_id(Store.editing_id)
@@ -141,10 +143,25 @@ func _timer() -> Dictionary:
 	return timer
 
 
+func _paint_static() -> void:
+	var palette := Palette.current()
+	Palette.paint_back(%Back)
+	for node_name in ["NameLabel", "TargetLabel", "NotesLabel", "HistoryLabel"]:
+		var label := get_node_or_null("%" + node_name) as Label
+		if label != null:
+			label.add_theme_color_override("font_color", palette["muted"])
+			label.add_theme_font_size_override("font_size", 16)
+	%Delete.add_theme_color_override("font_color", Palette.danger())
+	%Delete.add_theme_color_override("font_hover_color", Palette.danger())
+	%Delete.add_theme_color_override("font_pressed_color", Palette.danger())
+
+
 func _paint_craft() -> void:
 	var craft := str(_project.get("craft", "knit"))
-	%Knit.modulate = Color(1, 1, 1, 1) if craft == "knit" else Color(1, 1, 1, 0.45)
-	%Crochet.modulate = Color(1, 1, 1, 1) if craft == "crochet" else Color(1, 1, 1, 0.45)
+	%Knit.modulate = Color.WHITE
+	%Crochet.modulate = Color.WHITE
+	Palette.paint_action(%Knit, craft == "knit")
+	Palette.paint_action(%Crochet, craft == "crochet")
 
 
 func _paint_timer() -> void:
@@ -165,7 +182,9 @@ func _on_appearance(key: String) -> void:
 	if key != "theme" and key != "text_size":
 		return
 	%Background.color = Palette.current()["bg"]
+	_paint_static()
 	if not _project.is_empty():
+		_paint_craft()
 		_paint_history()
 
 

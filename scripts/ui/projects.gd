@@ -6,7 +6,9 @@ var _wordmark: TextureRect
 func _ready() -> void:
 	_wordmark = Mark.wordmark(168.0, 40.0)
 	%Column.add_child(_wordmark)
-	%Column.move_child(_wordmark, 0)
+	%Column.move_child(_wordmark, 1)
+	%Back.pressed.connect(_on_back)
+	Palette.paint_back(%Back)
 	%Background.color = Palette.current()["bg"]
 	AppSettings.changed.connect(_on_appearance)
 	%Debug.visible = OS.is_debug_build() and not AppInfo.SCREENSHOT_MODE
@@ -27,6 +29,7 @@ func _on_appearance(key: String) -> void:
 		return
 	%Background.color = Palette.current()["bg"]
 	_wordmark.modulate = Palette.current()["ink"]
+	Palette.paint_back(%Back)
 	_fill()
 
 
@@ -149,6 +152,10 @@ func _on_unlocked_paint(_is_on: bool) -> void:
 func _fit_column() -> void:
 	if is_inside_tree():
 		Layout.fit_column(%Column)
+
+
+func _on_back() -> void:
+	get_tree().change_scene_to_file("res://scenes/counter.tscn")
 
 
 func _on_new() -> void:
