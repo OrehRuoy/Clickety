@@ -37,7 +37,7 @@ func _notification(what: int) -> void:
 		_pause_timers()
 		save_now()
 		WidgetSync.flush_now()
-	elif what == NOTIFICATION_APPLICATION_RESUMED:
+	elif what == NOTIFICATION_APPLICATION_RESUMED or what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		merge_widget_pending()
 		NotifyService.reschedule()
 

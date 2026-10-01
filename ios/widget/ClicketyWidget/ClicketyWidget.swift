@@ -86,7 +86,7 @@ struct CountView: View {
         if let s = entry.snap, s.unlocked {
             counted(s)
         } else if entry.snap != nil {
-            lockedMessage("Unlock in Clickety")
+            lockedMessage("Unlock the widget")
         } else {
             lockedMessage("Open Clickety")
         }

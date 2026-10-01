@@ -5,35 +5,64 @@ import WidgetKit
 /// Added to the APP target by tools/ios/add_widget_target.rb. The WidgetBridge plugin (ObjC++) calls this C symbol.
 @_cdecl("clickety_widget_reload")
 public func clickety_widget_reload() {
+    ClicketyUnlockRoute.install()
     WidgetCenter.shared.reloadAllTimelines()
 }
 
-/// A locked-widget tap opens clickety://unlock. Godot 4.6 does not forward that URL into GDScript,
-/// so this records it in the App Group. The app reads that note the next time it comes forward.
+/// A locked-widget tap opens clickety://unlock. Godot 4.6 receives that URL and then drops it,
+/// so this records it first. The app reads that note the next time it comes forward.
 private enum ClicketyUnlockRoute {
-    static let install: Void = {
+    private static var installed = false
+
+    static func install() {
+        if installed { return }
         guard let delegate = NSClassFromString("GDTApplicationDelegate") else { return }
-        add(delegate, "scene:openURLContexts:", "v@:@@", openContexts)
-        add(delegate, "scene:willConnectToSession:options:", "v@:@@@", connectOptions)
-        add(delegate, "application:openURL:options:", "v@:@@@", openURL)
-    }()
-
-    private static func add(_ cls: AnyClass, _ name: String, _ types: UnsafePointer<CChar>, _ block: Any) {
-        let sel = NSSelectorFromString(name)
-        guard !class_respondsToSelector(cls, sel) else { return }
-        class_addMethod(cls, sel, imp_implementationWithBlock(block), types)
+        installed = true
+        swizzleOpen(delegate)
+        swizzleConnect(delegate)
+        swizzleLegacy(delegate)
     }
 
-    private static let openContexts: @convention(block) (Any, UIScene, Set<UIOpenURLContext>) -> Void = { _, _, contexts in
-        contexts.forEach { note($0.url) }
+    private static func swizzleOpen(_ cls: AnyClass) {
+        let sel = NSSelectorFromString("scene:openURLContexts:")
+        guard let method = class_getInstanceMethod(cls, sel) else {
+            let block: @convention(block) (AnyObject, UIScene, Set<UIOpenURLContext>) -> Void = { _, _, contexts in
+                contexts.forEach { note($0.url) }
+            }
+            class_addMethod(cls, sel, imp_implementationWithBlock(block), "v@:@@")
+            return
+        }
+        typealias Orig = @convention(c) (AnyObject, Selector, UIScene, Set<UIOpenURLContext>) -> Void
+        let orig = unsafeBitCast(method_getImplementation(method), to: Orig.self)
+        let block: @convention(block) (AnyObject, UIScene, Set<UIOpenURLContext>) -> Void = { obj, scene, contexts in
+            contexts.forEach { note($0.url) }
+            orig(obj, sel, scene, contexts)
+        }
+        method_setImplementation(method, imp_implementationWithBlock(block))
     }
 
-    private static let connectOptions: @convention(block) (Any, UIScene, UISceneSession, UIScene.ConnectionOptions) -> Void = { _, _, _, options in
-        options.urlContexts.forEach { note($0.url) }
+    private static func swizzleConnect(_ cls: AnyClass) {
+        let sel = NSSelectorFromString("scene:willConnectToSession:options:")
+        guard let method = class_getInstanceMethod(cls, sel) else { return }
+        typealias Orig = @convention(c) (AnyObject, Selector, UIScene, UISceneSession, UIScene.ConnectionOptions) -> Void
+        let orig = unsafeBitCast(method_getImplementation(method), to: Orig.self)
+        let block: @convention(block) (AnyObject, UIScene, UISceneSession, UIScene.ConnectionOptions) -> Void = { obj, scene, session, options in
+            options.urlContexts.forEach { note($0.url) }
+            orig(obj, sel, scene, session, options)
+        }
+        method_setImplementation(method, imp_implementationWithBlock(block))
     }
 
-    private static let openURL: @convention(block) (Any, UIApplication, URL, [UIApplication.OpenURLOptionsKey: Any]) -> Void = { _, _, url, _ in
-        note(url)
+    private static func swizzleLegacy(_ cls: AnyClass) {
+        let sel = NSSelectorFromString("application:openURL:options:")
+        guard let method = class_getInstanceMethod(cls, sel) else { return }
+        typealias Orig = @convention(c) (AnyObject, Selector, UIApplication, URL, [UIApplication.OpenURLOptionsKey: Any]) -> Bool
+        let orig = unsafeBitCast(method_getImplementation(method), to: Orig.self)
+        let block: @convention(block) (AnyObject, UIApplication, URL, [UIApplication.OpenURLOptionsKey: Any]) -> Bool = { obj, app, url, options in
+            note(url)
+            return orig(obj, sel, app, url, options)
+        }
+        method_setImplementation(method, imp_implementationWithBlock(block))
     }
 
     private static func note(_ url: URL) {
@@ -53,4 +82,4 @@ private enum ClicketyUnlockRoute {
     }
 }
 
-private let clicketyUnlockRouteInstalled: Void = ClicketyUnlockRoute.install
+private let clicketyUnlockRouteInstalled: Void = ClicketyUnlockRoute.install()
