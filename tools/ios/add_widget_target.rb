@@ -104,11 +104,21 @@ bf = embed.add_file_reference(widget.product_reference, true)
 bf.settings = { 'ATTRIBUTES' => ['RemoveHeadersOnCopy'] }
 app.add_dependency(widget)
 
-# 6) App side: WidgetReload.swift (exports clickety_widget_reload for the WidgetBridge plugin)
+# 6) App side: reload hook, plus the unlock intent. openAppWhenRun runs that intent in the app,
+# so the app target has to compile it too. The widget keeps its own copies.
 app_group_ref = project.main_group.children.find { |g| g.respond_to?(:path) && g.path == app_dir } || project.main_group
-reload_ref = app_group_ref.new_reference('WidgetReload.swift')
-app.add_file_references([reload_ref])
+app_swift = ['WidgetReload.swift']
+%w[Snapshot.swift IncrementIntent.swift].each do |name|
+  src = File.join(wsrc, name)
+  fail!("missing #{src}") unless File.exist?(src)
+  FileUtils.cp(src, File.join(srcroot, app_dir, name))
+  app_swift << name
+end
+app_swift.each do |name|
+  app.add_file_references([app_group_ref.new_reference(name)])
+end
 app.add_system_framework('WidgetKit')
+app.add_system_framework('AppIntents')
 app.build_configurations.each do |c|
   c.build_settings['SWIFT_VERSION'] ||= '5.0'
 end

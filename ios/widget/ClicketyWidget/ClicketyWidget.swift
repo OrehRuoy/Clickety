@@ -65,6 +65,14 @@ struct CountView: View {
                 content
                     .widgetBackground(isAccessory: isAccessory, paper: paper)
                     .widgetURL(URL(string: "clickety://open"))
+            } else if #available(iOS 17.0, *) {
+                // Godot 4.6 drops clickety://unlock, so the tap itself writes the purchase route.
+                Button(intent: OpenUnlockIntent()) {
+                    content
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .buttonStyle(.plain)
+                .widgetBackground(isAccessory: isAccessory, paper: paper)
             } else {
                 content
                     .widgetBackground(isAccessory: isAccessory, paper: paper)

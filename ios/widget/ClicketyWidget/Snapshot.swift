@@ -97,6 +97,7 @@ enum SharedStore {
         if list.count > 500 { list.removeFirst(list.count - 500) }
         if let out = try? JSONSerialization.data(withJSONObject: list), let s = String(data: out, encoding: .utf8) {
             d.set(s, forKey: "pending")
+            d.synchronize()
         }
     }
 
@@ -111,6 +112,7 @@ enum SharedStore {
         list.append(["route": "unlock", "t": Date().timeIntervalSince1970])
         if let out = try? JSONSerialization.data(withJSONObject: list), let s = String(data: out, encoding: .utf8) {
             d.set(s, forKey: "pending")
+            d.synchronize()
         }
     }
 }

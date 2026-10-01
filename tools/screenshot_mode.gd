@@ -2,9 +2,14 @@ extends Control
 
 const PHONE := Vector2i(428, 926)
 const IPAD := Vector2i(834, 1112)
-const CREAM := Color("FBF6EE")
+const PAPER := Color("F3E6D4")
 const INK := Color("1E1B18")
-const MUTED := Color("5E564E")
+const ACCENT := Color("B4492E")
+const YARN_LIGHT := Color("F6D7CC")
+const BOLD := preload("res://assets/fonts/AtkinsonHyperlegible-Bold.ttf")
+const REGULAR := preload("res://assets/fonts/AtkinsonHyperlegible-Regular.ttf")
+const CARD_SHADER := "shader_type canvas_item; uniform float radius_px; uniform vec2 rect_size; void fragment() { vec2 p = UV * rect_size; vec2 q = abs(p - rect_size * 0.5) - rect_size * 0.5 + vec2(radius_px); float d = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - radius_px; float a = 1.0 - smoothstep(0.0, 1.25, d); vec4 tex = texture(TEXTURE, UV); COLOR = vec4(tex.rgb, tex.a * a); }"
+const SHADE_SHADER := "shader_type canvas_item; render_mode blend_mix; uniform vec4 shade : source_color; uniform float radius_px; uniform vec2 rect_size; void fragment() { vec2 p = UV * rect_size; vec2 q = abs(p - rect_size * 0.5) - rect_size * 0.5 + vec2(radius_px); float d = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - radius_px; float a = (1.0 - smoothstep(0.0, 1.5, d)) * shade.a; COLOR = vec4(shade.rgb, a); }"
 
 
 func _ready() -> void:
@@ -43,9 +48,13 @@ func _run() -> void:
 		{"slug": "05-unlock", "scene": "res://scenes/unlock.tscn", "title": "Unlock once. Yours for good.", "line": ""},
 		{"slug": "06-trust", "scene": "res://scenes/settings.tscn", "title": "Screen stays awake · Saves every tap · Back up to Files", "line": ""},
 	]
+	var card_shader := Shader.new()
+	card_shader.code = CARD_SHADER
+	var shade_shader := Shader.new()
+	shade_shader.code = SHADE_SHADER
 	var layouts: Array = [
-		{"window": PHONE, "slots": [Vector2i(1290, 2796), Vector2i(1284, 2778)]},
-		{"window": IPAD, "slots": [Vector2i(2064, 2752)]},
+		{"window": PHONE, "slots": [{"folder": "iphone", "size": Vector2i(1284, 2778)}, {"folder": "iphone-alt", "size": Vector2i(1242, 2688)}]},
+		{"window": IPAD, "slots": [{"folder": "ipad", "size": Vector2i(2064, 2752)}, {"folder": "ipad-alt", "size": Vector2i(2048, 2732)}]},
 	]
 	for layout in layouts:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
@@ -53,29 +62,21 @@ func _run() -> void:
 		await get_tree().process_frame
 		await get_tree().process_frame
 		var shots := {}
-		for frame in frames:
+		for frame_i in frames.size():
+			var frame: Dictionary = frames[frame_i]
 			var scene_path := str(frame["scene"])
 			if not shots.has(scene_path):
 				shots[scene_path] = await _grab(host, scene_path)
 			var ui: Image = shots[scene_path]
 			for slot in layout["slots"]:
-				var size: Vector2i = slot
-				var folder := "%dx%d" % [size.x, size.y]
-				var band := int(round(float(size.y) * 0.18))
-				var caption := await _caption(size.x, band, str(frame["title"]), str(frame["line"]))
-				var top_inset := 58 if str(frame["slug"]) == "06-trust" else -1
-				var below := _cover(ui, size.x, size.y - band, top_inset)
-				var full := Image.create(size.x, size.y, false, Image.FORMAT_RGB8)
-				full.fill(CREAM)
-				full.blit_rect(caption, Rect2i(0, 0, caption.get_width(), caption.get_height()), Vector2i(0, 0))
-				full.blit_rect(below, Rect2i(0, 0, below.get_width(), below.get_height()), Vector2i(0, band))
+				var size: Vector2i = slot["size"]
+				var folder := str(slot["folder"])
+				var align_bottom := str(frame["slug"]) == "06-trust"
+				var full := await _compose(ui, size, frame_i, str(frame["title"]), str(frame["line"]), align_bottom, card_shader, shade_shader)
 				_save(full, "res://screenshots/%s/%s.png" % [folder, frame["slug"]])
-				_save(_cover(ui, size.x, size.y, top_inset), "res://screenshots/no-captions/%s/%s.png" % [folder, frame["slug"]])
+	_preview("res://screenshots/iphone", "res://screenshots/_panorama-iphone.png")
+	_preview("res://screenshots/ipad", "res://screenshots/_panorama-ipad.png")
 	AppInfo.SCREENSHOT_MODE = false
-	DisplayServer.window_set_size(PHONE)
-	await get_tree().process_frame
-	var review: Image = await _grab(host, "res://scenes/unlock.tscn")
-	_save(_cover(review, 1290, 2796), "res://screenshots/iap-review.png")
 	_restore(had_projects, projects_text, settings_snapshot, exports_before)
 	get_tree().quit(0)
 
@@ -93,52 +94,54 @@ func _grab(host: Control, scene_path: String) -> Image:
 	if scene_path.ends_with("settings.tscn"):
 		var scroll := scene.find_child("Scroll", true, false) as ScrollContainer
 		if scroll != null:
-			scroll.scroll_vertical = 100000
-			await get_tree().process_frame
-			await get_tree().process_frame
+			for _pass in 3:
+				await get_tree().process_frame
+				var bar := scroll.get_v_scroll_bar()
+				scroll.scroll_vertical = int(bar.max_value) if bar != null else 100000
 	await RenderingServer.frame_post_draw
 	return get_viewport().get_texture().get_image()
 
 
-func _caption(width: int, height: int, title: String, line: String) -> Image:
+func _compose(ui: Image, size: Vector2i, index: int, title: String, line: String, align_bottom: bool, card_shader: Shader, shade_shader: Shader) -> Image:
 	var viewport := SubViewport.new()
 	viewport.disable_3d = true
 	viewport.transparent_bg = false
-	viewport.size = Vector2i(width, height)
+	viewport.size = size
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	viewport.gui_disable_input = true
 	var root := Control.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.position = Vector2.ZERO
+	root.size = Vector2(size)
+	root.clip_contents = true
 	viewport.add_child(root)
 	var bg := ColorRect.new()
-	bg.color = CREAM
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = PAPER
+	bg.position = Vector2.ZERO
+	bg.size = Vector2(size)
 	root.add_child(bg)
-	var box := VBoxContainer.new()
-	box.anchor_left = 0.08
-	box.anchor_right = 0.92
-	box.anchor_bottom = 1.0
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 16)
-	root.add_child(box)
-	var heading := Label.new()
-	heading.text = title
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	heading.add_theme_font_override("font", load("res://assets/fonts/AtkinsonHyperlegible-Bold.ttf"))
-	heading.add_theme_font_size_override("font_size", maxi(48, int(width * 0.046)))
-	heading.add_theme_color_override("font_color", INK)
-	box.add_child(heading)
-	if line != "":
-		var sub := Label.new()
-		sub.text = line
-		sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		sub.add_theme_font_override("font", load("res://assets/fonts/AtkinsonHyperlegible-Regular.ttf"))
-		sub.add_theme_font_size_override("font_size", maxi(28, int(width * 0.028)))
-		sub.add_theme_color_override("font_color", MUTED)
-		box.add_child(sub)
+	var yarn_width := maxf(28.0, float(size.x) * 0.07)
+	var yarn := _yarn(size, index, yarn_width, ACCENT)
+	root.add_child(yarn)
+	var highlight := _yarn(size, index, yarn_width * 0.28, YARN_LIGHT)
+	highlight.position = Vector2(0, -yarn_width * 0.22)
+	root.add_child(highlight)
+	var card := Rect2(float(size.x) * 0.07, float(size.y) * 0.40, float(size.x) * 0.86, float(size.y) * 0.55)
+	var radius := float(size.x) * 0.055
+	var shadow := ColorRect.new()
+	shadow.position = card.position + Vector2(0, float(size.y) * 0.008)
+	shadow.size = card.size
+	shadow.material = _shade_material(shade_shader, card.size, radius)
+	root.add_child(shadow)
+	var shot := TextureRect.new()
+	shot.texture = ImageTexture.create_from_image(_cover(ui, int(card.size.x), int(card.size.y), align_bottom))
+	shot.ignore_texture_size = true
+	shot.stretch_mode = TextureRect.STRETCH_SCALE
+	shot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shot.position = card.position
+	shot.size = card.size
+	shot.material = _card_material(card_shader, card.size, radius)
+	root.add_child(shot)
+	_add_title(root, size, title, line)
 	add_child(viewport)
 	await get_tree().process_frame
 	await RenderingServer.frame_post_draw
@@ -149,7 +152,101 @@ func _caption(width: int, height: int, title: String, line: String) -> Image:
 	return image
 
 
-func _cover(source: Image, width: int, height: int, top_inset: int = -1) -> Image:
+func _yarn(size: Vector2i, index: int, width: float, color: Color) -> Line2D:
+	var line := Line2D.new()
+	line.width = width
+	line.default_color = color
+	line.joint_mode = Line2D.LINE_JOINT_ROUND
+	line.begin_cap_mode = Line2D.LINE_CAP_NONE
+	line.end_cap_mode = Line2D.LINE_CAP_NONE
+	line.antialiased = true
+	var points := PackedVector2Array()
+	var x := -float(size.x) * 0.08
+	var end := float(size.x) * 1.08
+	while x <= end:
+		var along := (float(index * size.x) + x) / float(size.x * 3)
+		var y := float(size.y) * 0.325 + sin(along * TAU) * float(size.y) * 0.05
+		points.append(Vector2(x, y))
+		x += 12.0
+	line.points = points
+	return line
+
+
+func _add_title(root: Control, size: Vector2i, title: String, line: String) -> void:
+	var heading := Label.new()
+	heading.text = title
+	heading.position = Vector2(float(size.x) * 0.07, float(size.y) * 0.045)
+	heading.size = Vector2(float(size.x) * 0.86, float(size.y) * 0.15)
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	heading.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	heading.max_lines_visible = 2
+	heading.clip_text = true
+	heading.add_theme_font_override("font", BOLD)
+	heading.add_theme_font_size_override("font_size", int(minf(float(size.x) * 0.05, float(size.y) * 0.034)))
+	heading.add_theme_color_override("font_color", INK)
+	root.add_child(heading)
+	if line == "":
+		return
+	heading.size = Vector2(float(size.x) * 0.86, float(size.y) * 0.105)
+	heading.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	var sub := Label.new()
+	sub.text = line
+	sub.position = Vector2(float(size.x) * 0.08, float(size.y) * 0.155)
+	sub.size = Vector2(float(size.x) * 0.84, float(size.y) * 0.045)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sub.max_lines_visible = 1
+	sub.clip_text = true
+	sub.add_theme_font_override("font", REGULAR)
+	sub.add_theme_font_size_override("font_size", int(float(size.x) * 0.028))
+	sub.add_theme_color_override("font_color", ACCENT)
+	root.add_child(sub)
+
+
+func _card_material(shader: Shader, rect_size: Vector2, radius: float) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	material.set_shader_parameter("radius_px", radius)
+	material.set_shader_parameter("rect_size", rect_size)
+	return material
+
+
+func _shade_material(shader: Shader, rect_size: Vector2, radius: float) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	material.set_shader_parameter("shade", Color(0.18, 0.1, 0.07, 0.16))
+	material.set_shader_parameter("radius_px", radius)
+	material.set_shader_parameter("rect_size", rect_size)
+	return material
+
+
+func _preview(folder: String, out_path: String) -> void:
+	var slugs: PackedStringArray = ["01-hero.png", "02-linked.png", "04-projects.png"]
+	var strips: Array[Image] = []
+	var height := 640
+	var width := 0
+	for slug in slugs:
+		var image := Image.new()
+		var err := image.load(ProjectSettings.globalize_path("%s/%s" % [folder, slug]))
+		if err != OK:
+			return
+		var next_w := int(round(float(image.get_width()) * float(height) / float(image.get_height())))
+		image.resize(next_w, height, Image.INTERPOLATE_LANCZOS)
+		if image.get_format() != Image.FORMAT_RGB8:
+			image.convert(Image.FORMAT_RGB8)
+		strips.append(image)
+		width += next_w
+	var sheet := Image.create(width, height, false, Image.FORMAT_RGB8)
+	var x := 0
+	for strip in strips:
+		sheet.blit_rect(strip, Rect2i(0, 0, strip.get_width(), strip.get_height()), Vector2i(x, 0))
+		x += strip.get_width()
+	_save(sheet, out_path)
+
+
+func _cover(source: Image, width: int, height: int, align_bottom: bool = false) -> Image:
 	var copy := source.duplicate()
 	if copy.get_format() != Image.FORMAT_RGB8:
 		copy.convert(Image.FORMAT_RGB8)
@@ -157,9 +254,7 @@ func _cover(source: Image, width: int, height: int, top_inset: int = -1) -> Imag
 	var next_w := maxi(width, int(ceil(float(copy.get_width()) * scale)))
 	var next_h := maxi(height, int(ceil(float(copy.get_height()) * scale)))
 	copy.resize(next_w, next_h, Image.INTERPOLATE_LANCZOS)
-	var origin_y := maxi(0, (next_h - height) / 2)
-	if top_inset >= 0:
-		origin_y = mini(maxi(0, int(round(float(top_inset) * scale))), maxi(0, next_h - height))
+	var origin_y := maxi(0, next_h - height) if align_bottom else maxi(0, (next_h - height) / 2)
 	var origin := Vector2i(maxi(0, (next_w - width) / 2), origin_y)
 	return copy.get_region(Rect2i(origin, Vector2i(width, height)))
 

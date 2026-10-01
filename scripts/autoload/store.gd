@@ -26,7 +26,11 @@ func _ready() -> void:
 	_prune_deleted()
 	merge_widget_pending()
 	if OS.get_name() == "iOS":
-		get_tree().create_timer(0.4).timeout.connect(merge_widget_pending)
+		var poll := Timer.new()
+		poll.wait_time = 0.4
+		poll.autostart = true
+		add_child(poll)
+		poll.timeout.connect(merge_widget_pending)
 	Backup.keep_daily("user://", _data)
 
 
@@ -552,7 +556,9 @@ func merge_widget_pending() -> void:
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
 		if str(entry.get("route", "")) == "unlock":
-			open_unlock = true
+			var stamp := float(entry.get("t", 0))
+			if stamp <= 0.0 or Time.get_unix_time_from_system() - stamp < 60.0:
+				open_unlock = true
 			continue
 		var project_id := str(entry.get("project_id", ""))
 		var counter_id := str(entry.get("counter_id", ""))

@@ -38,6 +38,7 @@ void wb_reload() {
 std::string wb_take_pending() {
 	NSUserDefaults *d = wb_defaults();
 	if (d == nil) return "[]";
+	[d synchronize];
 	NSString *s = [d stringForKey:@"pending"];
 	[d removeObjectForKey:@"pending"];
 	if (s == nil || s.length == 0) return "[]";
