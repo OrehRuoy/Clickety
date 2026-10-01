@@ -28,7 +28,7 @@ private enum ClicketyUnlockRoute {
         contexts.forEach { note($0.url) }
     }
 
-    private static let connectOptions: @convention(block) (Any, UIScene, UISceneSession, UISceneConnectionOptions) -> Void = { _, _, _, options in
+    private static let connectOptions: @convention(block) (Any, UIScene, UISceneSession, UIScene.ConnectionOptions) -> Void = { _, _, _, options in
         options.urlContexts.forEach { note($0.url) }
     }
 
