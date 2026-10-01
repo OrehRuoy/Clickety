@@ -12,7 +12,13 @@ func _ready() -> void:
 	_wordmark = Mark.wordmark(200.0, 48.0)
 	%Column.add_child(_wordmark)
 	%Column.move_child(_wordmark, 1)
-	_mark = Mark.icon("yarn", Palette.current()["accent"], 72.0)
+	_mark = TextureRect.new()
+	_mark.texture = load("res://assets/marks/brand.png")
+	_mark.custom_minimum_size = Vector2(168, 148)
+	_mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mark.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	%Column.add_child(_mark)
 	%Column.move_child(_mark, 2)
 	_card = PanelContainer.new()
@@ -63,7 +69,7 @@ func _paint_theme() -> void:
 	%Title.add_theme_color_override("font_color", palette["ink"])
 	Mark.refresh_wordmark(_wordmark)
 	if _mark is TextureRect:
-		_mark.modulate = palette["accent"]
+		_mark.modulate = Color.WHITE
 	var card := StyleBoxFlat.new()
 	card.bg_color = palette["surface"]
 	card.set_corner_radius_all(16)
@@ -102,22 +108,12 @@ func _paint_button() -> void:
 		%Unlock.text = "Unlock once"
 		%Unlock.disabled = false
 		return
-	var price := Purchase.price_text()
-	if price != "":
-		_price_label.add_theme_font_size_override("font_size", 34)
-		_price_label.text = price
-		%Unlock.text = "Unlock for %s" % price
-		%Unlock.disabled = false
-		return
-	%Unlock.text = "Unlock"
-	if Purchase.store_connected():
-		_price_label.add_theme_font_size_override("font_size", 18)
-		_price_label.text = "" if Purchase.price_failed() else "Loading the App Store price…"
-		%Unlock.disabled = true
-		return
-	_price_label.add_theme_font_size_override("font_size", 16)
-	_price_label.text = "On iPhone, this button shows the App Store price."
-	%Unlock.disabled = false
+	var live := Purchase.price_text()
+	var price := live if live != "" else AppInfo.US_PRICE
+	_price_label.add_theme_font_size_override("font_size", 34)
+	_price_label.text = price
+	%Unlock.text = "Unlock for %s" % price
+	%Unlock.disabled = Purchase.store_connected() and live == "" and not Purchase.price_failed()
 
 
 func _paint_title() -> void:

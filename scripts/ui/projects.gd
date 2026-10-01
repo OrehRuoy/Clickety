@@ -46,7 +46,7 @@ func _fill() -> void:
 		else:
 			active.append(project)
 	if active.is_empty():
-		%List.add_child(Mark.icon("yarn", Palette.current()["accent"], 88.0))
+		%List.add_child(Mark.brand(168.0, 148.0))
 	for project in active:
 		%List.add_child(_row(project))
 	for project in archived:

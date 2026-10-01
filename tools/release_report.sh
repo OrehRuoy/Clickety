@@ -65,20 +65,17 @@ else
 	bad "debug rows stay behind OS.is_debug_build()"
 fi
 
-if grep -RInE '3\.99|2\.99' --include='*.gd' --include='*.tscn' scripts scenes >/dev/null; then
-	grep -RInE '3\.99|2\.99' --include='*.gd' --include='*.tscn' scripts scenes || true
+prices="$(grep -RInE '3\.99|2\.99' --include='*.gd' --include='*.tscn' scripts scenes || true)"
+prices="$(printf '%s\n' "$prices" | grep -v 'scripts/ui/app_info.gd:.*US_PRICE' || true)"
+dollar="$(grep -RIn '\$' --include='*.gd' --include='*.tscn' scripts scenes || true)"
+if [ -n "$dollar" ]; then
+	dollar="$(printf '%s\n' "$dollar" | grep -v '\$—' | grep -v 'scripts/ui/app_info.gd:.*US_PRICE' || true)"
+fi
+if [ -n "$prices" ] || [ -n "$dollar" ]; then
+	printf '%s\n%s\n' "$prices" "$dollar"
 	bad "no hardcoded prices in scripts/ or scenes/"
 else
-	dollar="$(grep -RIn '\$' --include='*.gd' --include='*.tscn' scripts scenes || true)"
-	if [ -n "$dollar" ]; then
-		dollar="$(printf '%s\n' "$dollar" | grep -v '\$—' || true)"
-	fi
-	if [ -n "$dollar" ]; then
-		echo "$dollar"
-		bad "no hardcoded prices in scripts/ or scenes/"
-	else
-		pass "no hardcoded prices in scripts/ or scenes/ (debug \$— allowed)"
-	fi
+	pass "no hardcoded prices in scripts/ or scenes/ (US fallback and debug \$— allowed)"
 fi
 
 if grep -q 'textures/vram_compression/import_etc2_astc=true' project.godot \

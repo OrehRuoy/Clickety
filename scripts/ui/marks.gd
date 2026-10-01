@@ -9,6 +9,18 @@ func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_IGNORE
 
 
+static func brand(width: float, height: float) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.texture = load("res://assets/marks/brand.png")
+	rect.custom_minimum_size = Vector2(width, height)
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return rect
+
+
 static func icon(kind: String, tint: Color, side: float) -> Control:
 	var texture: Texture2D = load("res://assets/marks/%s.png" % kind) as Texture2D
 	if texture == null:
