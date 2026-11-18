@@ -342,8 +342,9 @@ void storekit_restore() {
 
 void storekit_request_review() {
 	dispatch_async(dispatch_get_main_queue(), ^{
-		if (@available(iOS 16.0, *)) {
-			UIWindowScene *scene = nil;
+		clickety_sk_log(@"requestReview");
+		UIWindowScene *scene = nil;
+		if (@available(iOS 13.0, *)) {
 			for (UIScene *candidate in UIApplication.sharedApplication.connectedScenes) {
 				if (candidate.activationState == UISceneActivationStateForegroundActive &&
 					[candidate isKindOfClass:[UIWindowScene class]]) {
@@ -359,10 +360,17 @@ void storekit_request_review() {
 					}
 				}
 			}
+		}
+		if (@available(iOS 14.0, *)) {
 			if (scene != nil) {
 				[SKStoreReviewController requestReviewInScene:scene];
+				return;
 			}
 		}
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+		[SKStoreReviewController requestReview];
+#pragma clang diagnostic pop
 	});
 }
 

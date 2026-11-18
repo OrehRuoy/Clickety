@@ -84,6 +84,31 @@ func review_count() -> int:
 	return int(_data.get("review_count", 0))
 
 
+func app_version() -> String:
+	return str(ProjectSettings.get_setting("application/config/version"))
+
+
+func rows_total() -> int:
+	return maxi(0, int(_data.get("rows_counted", 0)))
+
+
+func seed_rows(total: int) -> void:
+	if int(_data.get("rows_counted", -1)) >= 0:
+		return
+	_data["rows_counted"] = maxi(0, total)
+	save_to_dir(DATA_DIR, _data)
+
+
+func add_rows(count: int) -> void:
+	if count <= 0:
+		return
+	var current := int(_data.get("rows_counted", -1))
+	if current < 0:
+		current = 0
+	_data["rows_counted"] = current + count
+	save_to_dir(DATA_DIR, _data)
+
+
 func mark_review(now: int) -> void:
 	var count := ReviewGate.next_count(now, review_last(), review_count())
 	_data["review_last"] = now
@@ -100,20 +125,35 @@ func note_launch() -> void:
 	_store("launch_count")
 
 
-func enjoying_due() -> bool:
+func enjoying_due(repeat_finished: bool = false) -> bool:
 	return ReviewGate.enjoying_due(
-		int(Time.get_unix_time_from_system()),
-		installed_at(),
+		app_version(),
+		str(_data.get("review_prompt_version", "")),
+		int(_data.get("enjoying_opt_out", 0)) > 0,
 		launch_count(),
-		int(_data.get("enjoying_asked", 0)) > 0
+		rows_total(),
+		repeat_finished
 	)
 
 
 func mark_enjoying_asked() -> void:
-	if int(_data.get("enjoying_asked", 0)) > 0:
+	var version := app_version()
+	var changed := false
+	if str(_data.get("review_prompt_version", "")) != version:
+		_data["review_prompt_version"] = version
+		changed = true
+	if int(_data.get("enjoying_asked", 0)) <= 0:
+		_data["enjoying_asked"] = 1
+		changed = true
+	if changed:
+		_store("review_prompt_version")
+
+
+func opt_out_review() -> void:
+	if int(_data.get("enjoying_opt_out", 0)) > 0:
 		return
-	_data["enjoying_asked"] = 1
-	_store("enjoying_asked")
+	_data["enjoying_opt_out"] = 1
+	_store("enjoying_opt_out")
 
 
 func number(key: String) -> int:
@@ -196,6 +236,9 @@ static func _normalize(raw: Dictionary) -> Dictionary:
 		"review_count": 0,
 		"launch_count": 0,
 		"enjoying_asked": 0,
+		"enjoying_opt_out": 0,
+		"review_prompt_version": "",
+		"rows_counted": -1,
 	}
 	for key in FLAGS:
 		if typeof(raw.get(key)) == TYPE_BOOL:
@@ -213,7 +256,17 @@ static func _normalize(raw: Dictionary) -> Dictionary:
 	out["review_count"] = _non_negative(raw, "review_count")
 	out["launch_count"] = _non_negative(raw, "launch_count")
 	out["enjoying_asked"] = 1 if _non_negative(raw, "enjoying_asked") > 0 else 0
+	out["enjoying_opt_out"] = 1 if _non_negative(raw, "enjoying_opt_out") > 0 else 0
+	out["review_prompt_version"] = str(raw.get("review_prompt_version", ""))
+	if raw.has("rows_counted") and _is_number(raw["rows_counted"]) and int(raw["rows_counted"]) >= 0:
+		out["rows_counted"] = int(raw["rows_counted"])
+	else:
+		out["rows_counted"] = -1
 	return out
+
+
+static func _is_number(value) -> bool:
+	return typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT
 
 
 static func _non_negative(raw: Dictionary, key: String) -> int:

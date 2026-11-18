@@ -24,6 +24,7 @@ func _ready() -> void:
 	if projects().is_empty():
 		create_project("My project", "knit")
 	_prune_deleted()
+	AppSettings.seed_rows(ReviewGate.rows_from_projects(_data.get("projects", [])))
 	merge_widget_pending()
 	if OS.get_name() == "iOS":
 		var poll := Timer.new()
@@ -439,6 +440,10 @@ func _apply(project: Dictionary, result: Dictionary, _kind: String = "") -> void
 	var delta: Dictionary = result.get("changed", {})
 	if delta.is_empty():
 		return
+	if _kind == "tap" or _kind == "widget":
+		var added := ReviewGate.rows_in_change(project, delta, result.get("wrapped", []))
+		if added > 0:
+			AppSettings.add_rows(added)
 	_touch(project)
 	changed.emit(str(project.get("id", "")))
 	var wrapped_ids: Array = result.get("wrapped", [])

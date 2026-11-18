@@ -62,6 +62,6 @@ Walk this on an iPhone and an iPad. Tick each line. Headless tests are already r
 
 ## Review prompt
 
-- [ ] No rating dialog of our own appears.
-- [ ] On a normal new install, counting does not ask for a review during the first 3 days.
-- [ ] Debug builds can press Settings → Ask for a review to exercise the StoreKit call. A release build does not show that row.
+- [ ] The enjoying question appears after 50 counted rows or a finished repeat, never on the first launch, and at most once per version. No still opens feedback and is not asked again.
+- [ ] Yes calls the system review request. A debug build logs `Clickety review: requestReview`.
+- [ ] Debug builds can press Settings → Preview enjoying question. A release build does not show that row.

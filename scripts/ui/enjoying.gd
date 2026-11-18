@@ -76,6 +76,8 @@ func _show_question() -> void:
 
 
 func _open_form() -> void:
+	if not preview:
+		AppSettings.opt_out_review()
 	_show_form.call_deferred()
 
 

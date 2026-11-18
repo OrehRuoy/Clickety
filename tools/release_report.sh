@@ -24,6 +24,8 @@ while IFS= read -r line; do
 	case "$line" in
 		scripts/ui/about.gd:*PRIVACY_URL*) ;;
 		scripts/ui/about.gd:*mailto:*) ;;
+		scripts/ui/settings.gd:*DEVELOPER_URL*) ;;
+		scripts/ui/settings.gd:*SEWLENS_URL*) ;;
 		*)
 			echo "$line"
 			shell_bad=1
@@ -31,9 +33,9 @@ while IFS= read -r line; do
 	esac
 done < <(grep -RIn 'OS.shell_open' --include='*.gd' --include='*.tscn' scripts scenes || true)
 if [ "$shell_bad" -eq 0 ]; then
-	pass "OS.shell_open only for the About privacy link and support email"
+	pass "OS.shell_open only for About links and the Settings App Store rows"
 else
-	bad "OS.shell_open only for the About privacy link and support email"
+	bad "OS.shell_open only for About links and the Settings App Store rows"
 fi
 
 ad_hits="$(grep -RInEi 'admob|applovin|firebase|analytics|crashlytics|sentry|tracking' \
@@ -80,11 +82,12 @@ fi
 
 if grep -q 'textures/vram_compression/import_etc2_astc=true' project.godot \
 	&& grep -q 'application/export_project_only=true' export_presets.cfg \
-	&& grep -q 'application/short_version="1.0.0"' export_presets.cfg \
-	&& grep -q 'config/version="1.0.0"' project.godot; then
-	pass "ETC2/ASTC, export_project_only, and version 1.0.0"
+	&& grep -q 'application/short_version="1.0.1"' export_presets.cfg \
+	&& grep -q 'application/version="24"' export_presets.cfg \
+	&& grep -q 'config/version="1.0.1"' project.godot; then
+	pass "ETC2/ASTC, export_project_only, and version 1.0.1 (24)"
 else
-	bad "ETC2/ASTC, export_project_only, and version 1.0.0"
+	bad "ETC2/ASTC, export_project_only, and version 1.0.1 (24)"
 fi
 
 on() { grep -q "^plugins/$1=true" export_presets.cfg; }

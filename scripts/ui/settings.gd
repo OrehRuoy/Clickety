@@ -31,6 +31,8 @@ var _rows: Array[Button] = []
 var _theme_buttons := {}
 var _size_buttons := {}
 var _checks: Array[CheckButton] = []
+var _card_titles: Array[Label] = []
+var _card_lines: Array[Label] = []
 
 
 func _ready() -> void:
@@ -102,6 +104,9 @@ func _build() -> void:
 	_choice(body, "Leave a review", _on_leave_review)
 	_review_note = _label(body, "")
 	_review_note.visible = false
+	var developer := _choice(body, "More from the developer", _on_developer)
+	developer.set_meta("store_url", AppInfo.DEVELOPER_URL)
+	_app_card(body, AppInfo.SEWLENS_NAME, AppInfo.SEWLENS_LINE, "res://assets/icon/sewlens.jpg", _on_sewlens)
 	_choice(body, "About", _on_about)
 
 
@@ -189,6 +194,10 @@ func _paint() -> void:
 		_mark(_size_buttons[key], str(key) == AppSettings.choice("text_size"), palette)
 	for button in _checks:
 		_paint_check(button, palette)
+	for label in _card_titles:
+		label.add_theme_color_override("font_color", palette["ink"])
+	for label in _card_lines:
+		label.add_theme_color_override("font_color", palette["muted"])
 
 
 func _mark(button: Button, selected: bool, palette: Dictionary) -> void:
@@ -315,6 +324,70 @@ func _on_reminder_message(_text: String) -> void:
 
 func _on_test_reminder() -> void:
 	NotifyService.test_soon()
+
+
+func _app_card(parent: VBoxContainer, title: String, line: String, icon_path: String, handler: Callable) -> void:
+	var button := Button.new()
+	button.text = ""
+	button.custom_minimum_size = Vector2(0, 92)
+	button.focus_mode = Control.FOCUS_NONE
+	button.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.set_meta("store_url", AppInfo.SEWLENS_URL)
+	button.pressed.connect(handler)
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 12
+	row.offset_top = 10
+	row.offset_right = -12
+	row.offset_bottom = -10
+	row.add_theme_constant_override("separation", 12)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	button.add_child(row)
+	var icon := TextureRect.new()
+	icon.texture = load(icon_path)
+	icon.custom_minimum_size = Vector2(52, 52)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(icon)
+	var text := VBoxContainer.new()
+	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(text)
+	var name := Label.new()
+	name.text = title
+	name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	text.add_child(name)
+	_card_titles.append(name)
+	var subtitle := Label.new()
+	subtitle.text = line
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	subtitle.add_theme_font_size_override("font_size", 15)
+	subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	text.add_child(subtitle)
+	_card_lines.append(subtitle)
+	parent.add_child(button)
+	_rows.append(button)
+
+
+func _on_developer() -> void:
+	if AppInfo.DEVELOPER_URL == "":
+		return
+	if OS.is_debug_build():
+		print("Clickety settings: open %s" % AppInfo.DEVELOPER_URL)
+	OS.shell_open(AppInfo.DEVELOPER_URL)
+
+
+func _on_sewlens() -> void:
+	if AppInfo.SEWLENS_URL == "":
+		return
+	if OS.is_debug_build():
+		print("Clickety settings: open %s" % AppInfo.SEWLENS_URL)
+	OS.shell_open(AppInfo.SEWLENS_URL)
 
 
 func _on_leave_review() -> void:

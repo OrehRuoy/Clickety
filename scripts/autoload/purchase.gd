@@ -71,11 +71,13 @@ func consider_review() -> void:
 
 
 func request_review() -> void:
+	if OS.is_debug_build():
+		print("Clickety review: requestReview")
 	if _bridge != null and _bridge.has_method("request_review"):
 		_bridge.request_review()
 		return
 	if OS.is_debug_build():
-		print("Purchase: review prompt skipped (no StoreKit)")
+		print("Clickety review: requestReview skipped (no StoreKit)")
 
 
 func set_intent(kind: String, return_to: String) -> void:

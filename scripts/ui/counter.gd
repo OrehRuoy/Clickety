@@ -127,10 +127,20 @@ func _process(_delta: float) -> void:
 	_place_wash()
 
 
-func _maybe_enjoying() -> void:
-	if AppInfo.SCREENSHOT_MODE or not AppSettings.enjoying_due():
+func _maybe_enjoying(repeat_finished: bool = false) -> void:
+	if AppInfo.SCREENSHOT_MODE or get_node_or_null("EnjoyingPrompt") != null:
 		return
+	if not AppSettings.enjoying_due(repeat_finished):
+		return
+	if OS.is_debug_build():
+		print("Clickety review: threshold met rows=%d repeat=%s launch=%d version=%s" % [
+			AppSettings.rows_total(),
+			"yes" if repeat_finished else "no",
+			AppSettings.launch_count(),
+			AppSettings.app_version(),
+		])
 	var prompt: Node = (load("res://scripts/ui/enjoying.gd") as GDScript).new()
+	prompt.name = "EnjoyingPrompt"
 	add_child(prompt)
 
 
@@ -323,6 +333,7 @@ func _on_tap() -> void:
 		Feedback.tick()
 	_pulse_numeral()
 	_count_hint()
+	_maybe_enjoying(_saw_wrap)
 
 
 func _on_minus() -> void:
