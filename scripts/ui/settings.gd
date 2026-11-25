@@ -391,11 +391,18 @@ func _on_sewlens() -> void:
 
 
 func _on_leave_review() -> void:
-	Purchase.request_review()
-	if OS.get_name() == "iOS" or _review_note == null:
+	if AppInfo.WRITE_REVIEW_URL == "":
 		return
-	_review_note.text = "The review sheet opens in the iPhone app."
-	_review_note.visible = true
+	if OS.is_debug_build():
+		print("Clickety settings: open %s" % AppInfo.WRITE_REVIEW_URL)
+	var opened := OS.shell_open(AppInfo.WRITE_REVIEW_URL)
+	if _review_note == null:
+		return
+	if opened != OK:
+		_review_note.text = "Couldn't open the App Store review page."
+		_review_note.visible = true
+	else:
+		_review_note.visible = false
 
 
 func _on_preview_enjoying() -> void:

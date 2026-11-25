@@ -8,6 +8,8 @@ void emit_purchase_failed(const char *message);
 void emit_entitlements_updated(bool unlocked);
 void emit_products_loaded(const char *price);
 void emit_products_failed(const char *message);
+void emit_review_presented(void);
+void emit_review_unavailable(void);
 
 static NSString *g_product_id = @"com.yourprefix.rowcounter.unlock";
 static NSString *g_price = @"";
@@ -340,38 +342,107 @@ void storekit_restore() {
 	[g_storekit restore];
 }
 
-void storekit_request_review() {
+static BOOL clickety_class_is_review(NSString *name) {
+	if (name.length == 0) {
+		return NO;
+	}
+	return [name rangeOfString:@"StoreReview"].location != NSNotFound;
+}
+
+static BOOL clickety_controller_is_review(UIViewController *controller, int depth) {
+	if (controller == nil || depth > 6) {
+		return NO;
+	}
+	if (clickety_class_is_review(NSStringFromClass(controller.class))) {
+		return YES;
+	}
+	if (clickety_controller_is_review(controller.presentedViewController, depth + 1)) {
+		return YES;
+	}
+	for (UIViewController *child in controller.childViewControllers) {
+		if (clickety_controller_is_review(child, depth + 1)) {
+			return YES;
+		}
+	}
+	return NO;
+}
+
+static UIWindowScene *clickety_review_scene(void) {
+	UIWindowScene *fallback = nil;
+	for (UIScene *candidate in UIApplication.sharedApplication.connectedScenes) {
+		if (![candidate isKindOfClass:[UIWindowScene class]]) {
+			continue;
+		}
+		UIWindowScene *window_scene = (UIWindowScene *)candidate;
+		if (fallback == nil) {
+			fallback = window_scene;
+		}
+		if (candidate.activationState == UISceneActivationStateForegroundActive) {
+			return window_scene;
+		}
+	}
+	return fallback;
+}
+
+static BOOL clickety_review_visible(void) {
+	for (UIScene *candidate in UIApplication.sharedApplication.connectedScenes) {
+		if (![candidate isKindOfClass:[UIWindowScene class]]) {
+			continue;
+		}
+		for (UIWindow *window in ((UIWindowScene *)candidate).windows) {
+			if (clickety_class_is_review(NSStringFromClass(window.class))) {
+				return YES;
+			}
+			if (clickety_controller_is_review(window.rootViewController, 0)) {
+				return YES;
+			}
+		}
+	}
+	return NO;
+}
+
+static void clickety_probe_review_sheet(void) {
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		if (clickety_review_visible()) {
+			clickety_sk_log(@"requestReview presented");
+			emit_review_presented();
+			return;
+		}
+		clickety_sk_log(@"requestReview nothing shown");
+		emit_review_unavailable();
+	});
+}
+
+bool storekit_request_review(void) {
+	clickety_sk_log(@"requestReview");
+	if (UIApplication.sharedApplication == nil) {
+		clickety_sk_log(@"requestReview failed: no application");
+		return false;
+	}
+	if (clickety_review_scene() == nil) {
+		clickety_sk_log(@"requestReview failed: no window scene");
+		return false;
+	}
 	dispatch_async(dispatch_get_main_queue(), ^{
-		clickety_sk_log(@"requestReview");
-		UIWindowScene *scene = nil;
-		if (@available(iOS 13.0, *)) {
-			for (UIScene *candidate in UIApplication.sharedApplication.connectedScenes) {
-				if (candidate.activationState == UISceneActivationStateForegroundActive &&
-					[candidate isKindOfClass:[UIWindowScene class]]) {
-					scene = (UIWindowScene *)candidate;
-					break;
-				}
-			}
-			if (scene == nil) {
-				for (UIScene *candidate in UIApplication.sharedApplication.connectedScenes) {
-					if ([candidate isKindOfClass:[UIWindowScene class]]) {
-						scene = (UIWindowScene *)candidate;
-						break;
-					}
-				}
-			}
+		UIWindowScene *scene = clickety_review_scene();
+		if (scene == nil) {
+			clickety_sk_log(@"requestReview failed: no window scene");
+			emit_review_unavailable();
+			return;
 		}
-		if (@available(iOS 14.0, *)) {
-			if (scene != nil) {
-				[SKStoreReviewController requestReviewInScene:scene];
-				return;
-			}
-		}
+		@try {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-		[SKStoreReviewController requestReview];
+			[SKStoreReviewController requestReviewInScene:scene];
 #pragma clang diagnostic pop
+		} @catch (NSException *exception) {
+			clickety_sk_log(@"requestReview error: %@", exception);
+			emit_review_unavailable();
+			return;
+		}
+		clickety_probe_review_sheet();
 	});
+	return true;
 }
 
 const char *storekit_get_price() {

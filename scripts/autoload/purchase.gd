@@ -7,6 +7,7 @@ signal purchase_error(message: String)
 
 const DATA_DIR := "user://data"
 const FILE_NAME := "entitlement.json"
+const REVIEW_FALLBACK_SEC := 2.0
 
 var intent := ""
 var intent_return := "projects"
@@ -21,6 +22,9 @@ var _price_ready := false
 var _price_failed := false
 var _bridge: Object = null
 var _open_presets := false
+var _review_hooked := false
+var _review_ticket := 0
+var _review_settled := true
 
 
 func _ready() -> void:
@@ -73,11 +77,55 @@ func consider_review() -> void:
 func request_review() -> void:
 	if OS.is_debug_build():
 		print("Clickety review: requestReview")
-	if _bridge != null and _bridge.has_method("request_review"):
-		_bridge.request_review()
+	_review_ticket += 1
+	var ticket := _review_ticket
+	_review_settled = false
+	if _bridge == null or not _bridge.has_method("request_review"):
+		_open_write_review("no StoreKit")
 		return
+	_hook_review_signals()
+	var started: Variant = _bridge.call("request_review")
+	if typeof(started) != TYPE_BOOL or not bool(started):
+		_open_write_review("request_review failed")
+		return
+	get_tree().create_timer(REVIEW_FALLBACK_SEC).timeout.connect(_on_review_timeout.bind(ticket))
+
+
+func _hook_review_signals() -> void:
+	if _review_hooked or _bridge == null:
+		return
+	if _bridge.has_signal("review_presented"):
+		_bridge.review_presented.connect(_on_review_presented)
+	if _bridge.has_signal("review_unavailable"):
+		_bridge.review_unavailable.connect(_on_review_unavailable)
+	_review_hooked = true
+
+
+func _on_review_presented() -> void:
+	_review_settled = true
 	if OS.is_debug_build():
-		print("Clickety review: requestReview skipped (no StoreKit)")
+		print("Clickety review: sheet presented")
+
+
+func _on_review_unavailable() -> void:
+	_open_write_review("nothing shown")
+
+
+func _on_review_timeout(ticket: int) -> void:
+	if ticket != _review_ticket or _review_settled:
+		return
+	_open_write_review("timeout")
+
+
+func _open_write_review(reason: String) -> void:
+	if _review_settled:
+		return
+	_review_settled = true
+	if OS.is_debug_build():
+		print("Clickety review: write-review fallback (%s)" % reason)
+	if DisplayServer.get_name() == "headless":
+		return
+	OS.shell_open(AppInfo.WRITE_REVIEW_URL)
 
 
 func set_intent(kind: String, return_to: String) -> void:

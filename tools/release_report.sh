@@ -26,6 +26,8 @@ while IFS= read -r line; do
 		scripts/ui/about.gd:*mailto:*) ;;
 		scripts/ui/settings.gd:*DEVELOPER_URL*) ;;
 		scripts/ui/settings.gd:*SEWLENS_URL*) ;;
+		scripts/ui/settings.gd:*WRITE_REVIEW_URL*) ;;
+		scripts/autoload/purchase.gd:*WRITE_REVIEW_URL*) ;;
 		*)
 			echo "$line"
 			shell_bad=1
@@ -82,12 +84,12 @@ fi
 
 if grep -q 'textures/vram_compression/import_etc2_astc=true' project.godot \
 	&& grep -q 'application/export_project_only=true' export_presets.cfg \
-	&& grep -q 'application/short_version="1.0.1"' export_presets.cfg \
-	&& grep -q 'application/version="24"' export_presets.cfg \
-	&& grep -q 'config/version="1.0.1"' project.godot; then
-	pass "ETC2/ASTC, export_project_only, and version 1.0.1 (24)"
+	&& grep -q 'application/short_version="1.0.2"' export_presets.cfg \
+	&& grep -q 'application/version="26"' export_presets.cfg \
+	&& grep -q 'config/version="1.0.2"' project.godot; then
+	pass "ETC2/ASTC, export_project_only, and version 1.0.2 (26)"
 else
-	bad "ETC2/ASTC, export_project_only, and version 1.0.1 (24)"
+	bad "ETC2/ASTC, export_project_only, and version 1.0.2 (26)"
 fi
 
 on() { grep -q "^plugins/$1=true" export_presets.cfg; }

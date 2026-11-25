@@ -14,7 +14,7 @@ void storekit_deinit_impl(void);
 void storekit_initialize(const char *product_id);
 void storekit_purchase(const char *product_id);
 void storekit_restore(void);
-void storekit_request_review(void);
+bool storekit_request_review(void);
 const char *storekit_get_price(void);
 const char *storekit_get_title(void);
 bool storekit_is_price_ready(void);
@@ -39,13 +39,15 @@ protected:
 		ADD_SIGNAL(MethodInfo("entitlements_updated", PropertyInfo(Variant::BOOL, "unlocked")));
 		ADD_SIGNAL(MethodInfo("products_loaded", PropertyInfo(Variant::STRING, "price")));
 		ADD_SIGNAL(MethodInfo("products_failed", PropertyInfo(Variant::STRING, "message")));
+		ADD_SIGNAL(MethodInfo("review_presented"));
+		ADD_SIGNAL(MethodInfo("review_unavailable"));
 	}
 
 public:
 	void initialize(const String &product_id) { storekit_initialize(product_id.utf8().get_data()); }
 	void purchase(const String &product_id) { storekit_purchase(product_id.utf8().get_data()); }
 	void restore() { storekit_restore(); }
-	void request_review() { storekit_request_review(); }
+	bool request_review() { return storekit_request_review(); }
 	String get_price() { return String::utf8(storekit_get_price()); }
 	String get_title() { return String::utf8(storekit_get_title()); }
 	bool is_price_ready() { return storekit_is_price_ready(); }
@@ -81,6 +83,18 @@ void emit_products_loaded(const char *price) {
 void emit_products_failed(const char *message) {
 	if (storekit_singleton) {
 		storekit_singleton->emit_signal("products_failed", String::utf8(message));
+	}
+}
+
+void emit_review_presented() {
+	if (storekit_singleton) {
+		storekit_singleton->emit_signal("review_presented");
+	}
+}
+
+void emit_review_unavailable() {
+	if (storekit_singleton) {
+		storekit_singleton->emit_signal("review_unavailable");
 	}
 }
 

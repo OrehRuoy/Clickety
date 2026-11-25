@@ -228,10 +228,10 @@ jobs:
       - name: Set build number
         run: |
           set -euo pipefail
-          # 23 is the highest build uploaded (1.0.0, Actions run 23). Never reuse it.
+          # 25 is the highest build uploaded (1.0.1, Actions run 25). Never reuse it.
           BUILD="${GITHUB_RUN_NUMBER}"
-          if [ "$BUILD" -lt 24 ]; then
-            BUILD=24
+          if [ "$BUILD" -lt 26 ]; then
+            BUILD=26
           fi
           sed -i '' "s|application/version=\"[^\"]*\"|application/version=\"${BUILD}\"|" export_presets.cfg
           echo "Using CFBundleVersion ${BUILD}"

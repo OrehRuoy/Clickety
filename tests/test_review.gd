@@ -58,6 +58,16 @@ func _run() -> String:
 	var bare := {"counters": [{"id": "m", "role": "main", "value": 12, "start": 0, "step": 1}], "history": []}
 	if ReviewGate.rows_from_projects([bare]) != 12:
 		return "FAIL: a counter with no history ignored its value"
+	if AppInfo.APP_STORE_ID != "6817437890":
+		return "FAIL: app store id"
+	if AppInfo.WRITE_REVIEW_URL != "https://apps.apple.com/app/id6817437890?action=write-review":
+		return "FAIL: write-review url"
+	if AppInfo.SEWLENS_NAME != "SewLens" or AppInfo.SEWLENS_LINE != "Turn photos into sewing patterns":
+		return "FAIL: SewLens copy"
+	if AppInfo.SEWLENS_URL != "https://apps.apple.com/app/id6830324321":
+		return "FAIL: SewLens url"
+	if "AI" in AppInfo.SEWLENS_NAME or "AI" in AppInfo.SEWLENS_LINE:
+		return "FAIL: SewLens copy says AI"
 	var links := _settings_links()
 	if links != "":
 		return links
